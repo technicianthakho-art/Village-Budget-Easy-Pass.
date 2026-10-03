@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ระบบบริหารงบประมาณพัฒนาหมู่บ้าน & Easy Pass Smart Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Sarabun', 'sans-serif'] },
+          colors: {
+            brand: { 50: '#f0fdf4', 500: '#16a34a', 600: '#15803d', 700: '#15803d' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Sarabun', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .glass-header { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(12px); }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="h-full text-slate-900 bg-slate-50/60 flex flex-col antialiased selection:bg-indigo-500 selection:text-white relative pb-16 sm:pb-0">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- FLOATING NOTIFICATION WIDGET -->
+  <div id="notificationWidget" class="fixed bottom-20 sm:bottom-5 right-5 z-50 hidden transition transform hover:scale-105">
+    <button onclick="switchMainTab('pending')" class="bg-white text-slate-900 font-extrabold px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 border border-amber-300 ring-4 ring-amber-400/20 animate-bounce">
+      <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+        <i class="fa-solid fa-bell text-lg"></i>
+      </div>
+      <div class="text-left">
+        <div class="text-[10px] uppercase tracking-wider font-black text-amber-600">คำร้อง Easy Pass ใหม่</div>
+        <div class="text-xs font-black text-slate-900"><span id="widgetCount">0</span> รายการ เข้ามาใหม่!</div>
+      </div>
+    </button>
+  </div>
+
+  <!-- Top App Navigation -->
+  <header class="glass-header text-slate-900 sticky top-0 z-40 border-b border-slate-200/80 shadow-sm">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between py-2.5 sm:py-0 sm:h-16 gap-3">
+        
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-500 flex items-center justify-center text-white font-black shadow-md shadow-indigo-500/20 shrink-0">
+              <i class="fa-solid fa-chart-line text-lg"></i>
+            </div>
+            <div>
+              <h1 class="font-black text-base sm:text-lg leading-tight tracking-tight text-slate-900">บริหารงบประมาณ & Easy Pass</h1>
+              <p id="headerVillageCountSubtitle" class="text-[11px] text-indigo-600 font-bold tracking-wide">กำลังดึงข้อมูลระบบ...</p>
+            </div>
+          </div>
+
+          <div class="flex sm:hidden items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+            <button id="navBtnSummaryMob" onclick="switchMainTab('summary')" class="px-2.5 py-1 rounded-lg text-indigo-700 bg-white shadow-sm font-black transition">สรุป</button>
+            <button id="navBtnPendingMob" onclick="switchMainTab('pending')" class="px-2.5 py-1 rounded-lg text-slate-600 font-bold hover:text-indigo-600 transition relative">
+              ค้างอนุมัติ
+              <span id="badgePendingCountMob" class="hidden absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-black animate-bounce">0</span>
+            </button>
+            <button id="navBtnDashboardMob" onclick="switchMainTab('dashboard')" class="px-2.5 py-1 rounded-lg text-slate-600 font-bold hover:text-indigo-600 transition">สถิติ</button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3">
+          
+          <div class="relative flex-1 sm:flex-initial">
+            <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-indigo-600">
+              <i class="fa-solid fa-globe text-xs"></i>
+            </div>
+            <select id="globalYearSelect" onchange="handleGlobalYearChange()" class="w-full sm:w-auto bg-slate-100 hover:bg-slate-200/80 text-slate-900 border border-slate-300 rounded-xl pl-8 pr-8 py-2 text-xs sm:text-sm font-black focus:ring-2 focus:ring-indigo-500 focus:outline-none transition appearance-none cursor-pointer">
+              <option value="ALL">🌐 รวมทุกปีงบประมาณ</option>
+              <option value="2569" selected>ปีงบประมาณ 2569</option>
+              <option value="2570">ปีงบประมาณ 2570</option>
+              <option value="2571">ปีงบประมาณ 2571</option>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 pointer-events-none"></i>
+          </div>
+
+          <nav class="bg-slate-100 p-1.5 rounded-xl border border-slate-200 hidden sm:flex text-xs font-bold gap-1">
+            <button id="navBtnSummary" onclick="switchMainTab('summary')" class="px-4 py-1.5 rounded-lg text-indigo-700 bg-white shadow-sm transition-all duration-200 font-black">
+              <i class="fa-solid fa-table-cells mr-1.5 text-indigo-600"></i> ตารางสรุป
+            </button>
+            <button id="navBtnPending" onclick="switchMainTab('pending')" class="px-4 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-white/60 transition-all duration-200 relative">
+              <i class="fa-solid fa-clock-rotate-left mr-1.5 text-amber-500"></i> คำร้องค้างอนุมัติ
+              <span id="badgePendingCount" class="hidden ml-1.5 bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse">0</span>
+            </button>
+            <button id="navBtnDashboard" onclick="switchMainTab('dashboard')" class="px-4 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-white/60 transition-all duration-200">
+              <i class="fa-solid fa-chart-pie mr-1.5"></i> สถิติ & แดชบอร์ด
+            </button>
+          </nav>
+
+          <div id="adminControlArea" class="shrink-0">
+            <button id="btnLogin" onclick="openLoginModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-black shadow-sm active:scale-95 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-key"></i> <span>สิทธิ์ Admin</span>
+            </button>
+            
+            <div id="adminActiveBadge" class="hidden flex items-center gap-1.5">
+              <span class="bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs px-3 py-1.5 rounded-xl font-extrabold flex items-center gap-2 shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Admin Active
+              </span>
+              <button onclick="logoutAdmin()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 p-2 rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center" title="ออกจากระบบ Admin">
+                <i class="fa-solid fa-power-off text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main class="max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-5 flex-grow flex flex-col gap-4 sm:gap-5">
+
+    <!-- TAB 1: SUMMARY TABLE & CARDS -->
+    <section id="tabSummary" class="space-y-4 sm:space-y-5">
+      
+      <!-- Exec Cards Overview -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-extrabold text-slate-500">งบจัดสรรรวม</span>
+            <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs"><i class="fa-solid fa-wallet"></i></span>
+          </div>
+          <p id="cardAllocated" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">0 ฿</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-extrabold text-rose-600">เบิกใช้ไปแล้ว</span>
+            <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-xs"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+          </div>
+          <p id="cardSpent" class="text-xl sm:text-2xl font-black text-rose-600 tracking-tight">0 ฿</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-extrabold text-emerald-600">งบปรับเพิ่ม</span>
+            <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs"><i class="fa-solid fa-circle-plus"></i></span>
+          </div>
+          <p id="cardAdded" class="text-xl sm:text-2xl font-black text-emerald-600 tracking-tight">0 ฿</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-extrabold text-indigo-600">คงเหลือสุทธิ / คลัง</span>
+            <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs"><i class="fa-solid fa-vault"></i></span>
+          </div>
+          <p id="cardBalance" class="text-xl sm:text-2xl font-black text-indigo-600 tracking-tight">0 ฿</p>
+        </div>
+      </div>
+
+      <!-- Action Search Bar -->
+      <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input type="text" id="summarySearch" oninput="filterSummaryRows()" placeholder="พิมพ์ชื่อหมู่บ้านเพื่อค้นหา..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <button id="btnNewRecord" onclick="openFormModal()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+            <i class="fa-solid fa-plus text-xs"></i> บันทึกรายการใหม่
+          </button>
+          
+          <button id="btnManageVillagesAdmin" onclick="openVillageModalForCreate()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-1 whitespace-nowrap">
+            <i class="fa-solid fa-house-plus text-xs"></i> เพิ่มหมู่บ้าน
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Table Desktop -->
+      <div class="hidden sm:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="max-h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead class="sticky top-0 z-20 bg-slate-100 text-slate-900 font-black border-b border-slate-200 shadow-sm">
+              <tr>
+                <th class="py-3 px-4 w-16 text-center bg-slate-100">รหัส</th>
+                <th class="py-3 px-4 bg-slate-100">ชื่อหน่วยงาน / หมู่บ้าน</th>
+                <th class="py-3 px-4 text-right text-rose-600 bg-slate-100">เบิกใช้แล้ว</th>
+                <th class="py-3 px-4 text-right text-emerald-600 bg-slate-100">งบปรับเพิ่ม</th>
+                <th class="py-3 px-4 text-right text-amber-600 bg-slate-100">งบปรับลด</th>
+                <th class="py-3 px-4 text-right text-indigo-700 bg-slate-100">งบคลังคงเหลือ</th>
+                <th class="py-3 px-4 text-center w-24 bg-slate-100">แอ็กชัน</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTableBody" class="divide-y divide-slate-100 font-bold text-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Summary Cards Mobile -->
+      <div id="summaryCardContainer" class="sm:hidden space-y-2.5"></div>
+
+    </section>
+
+    <!-- TAB 2: PENDING EASY PASS REQUESTS -->
+    <section id="tabPending" class="hidden space-y-4 sm:space-y-5">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+          <div>
+            <h2 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-amber-500"></i> คำร้องตัดเงิน Easy Pass รออนุมัติ
+            </h2>
+            <p class="text-xs text-slate-500 font-semibold">* รายการอนุมัติจะนำไปหักลบในหมวดงบซ่อมแซมเครื่องจักรโดยอัตโนมัติ</p>
+          </div>
+          <button onclick="fetchPendingEasyPassRequests(true)" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold transition">
+            <i class="fa-solid fa-rotate mr-1"></i> รีเฟรช
+          </button>
+        </div>
+
+        <div id="pendingRequestsListContainer" class="space-y-3 pt-1"></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: VILLAGE DETAIL PAGE -->
+    <section id="tabDetail" class="hidden space-y-3.5 sm:space-y-4">
+      
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+          <button onclick="closeDetailPage()" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-indigo-600 bg-slate-100 px-3 py-1.5 rounded-xl transition">
+            <i class="fa-solid fa-arrow-left"></i> ย้อนกลับ
+          </button>
+          
+          <button id="btnVillageAddRecord" onclick="openFormModalForCurrentVillage()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition items-center gap-1.5">
+            <i class="fa-solid fa-plus text-xs"></i> บันทึกรายการเพิ่ม
+          </button>
+        </div>
+
+        <div>
+          <span id="detailVillageBadge" class="inline-block bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-black px-2.5 py-0.5 rounded-md mb-0.5">หมู่บ้าน</span>
+          <h2 id="detailVillageTitle" class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">รายละเอียดงบประมาณ</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div class="bg-emerald-50/50 rounded-2xl p-3.5 border border-emerald-200 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-extrabold text-emerald-950 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> งบพัฒนาหมู่บ้าน
+              </span>
+              <span class="text-[10px] text-emerald-800 bg-emerald-100 font-extrabold px-2 py-0.5 rounded-md">หมวดพัฒนา</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm">
+                <span class="text-[10px] text-slate-500 font-semibold block">งบจัดสรร</span>
+                <p id="detailVillageAllocatedText" class="text-xs sm:text-sm font-extrabold text-slate-900">0 ฿</p>
+              </div>
+              <div class="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm">
+                <span class="text-[10px] text-slate-500 font-semibold block">ใช้ไปแล้ว</span>
+                <p id="detailVillageUsedText" class="text-xs sm:text-sm font-extrabold text-rose-600">0 ฿</p>
+              </div>
+              <div class="bg-emerald-100/80 p-2 rounded-xl border border-emerald-200 shadow-sm">
+                <span class="text-[10px] text-emerald-900 font-extrabold block">คงเหลือ</span>
+                <p id="detailVillageBalanceText" class="text-xs sm:text-sm font-black text-emerald-700">0 ฿</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-sky-50/50 rounded-2xl p-3.5 border border-sky-200 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-extrabold text-sky-950 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-sky-500"></span> งบซ่อมแซมเครื่องจักร
+              </span>
+              <span class="text-[10px] text-sky-800 bg-sky-100 font-extrabold px-2 py-0.5 rounded-md">หมวดซ่อมบำรุง</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="bg-white p-2 rounded-xl border border-sky-100 shadow-sm">
+                <span class="text-[10px] text-slate-500 font-semibold block">งบจัดสรร</span>
+                <p id="detailRepairAllocatedText" class="text-xs sm:text-sm font-extrabold text-slate-900">0 ฿</p>
+              </div>
+              <div class="bg-white p-2 rounded-xl border border-sky-100 shadow-sm">
+                <span class="text-[10px] text-slate-500 font-semibold block">ใช้ไปแล้ว</span>
+                <p id="detailRepairUsedText" class="text-xs sm:text-sm font-extrabold text-rose-600">0 ฿</p>
+              </div>
+              <div class="bg-sky-100/80 p-2 rounded-xl border border-sky-200 shadow-sm">
+                <span class="text-[10px] text-sky-900 font-extrabold block">คงเหลือ</span>
+                <p id="detailRepairBalanceText" class="text-xs sm:text-sm font-black text-sky-800">0 ฿</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-indigo-900 text-white rounded-2xl p-3.5 shadow-md flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-extrabold text-indigo-100 flex items-center gap-1.5">
+                <i class="fa-solid fa-calculator text-amber-400"></i> งบประมาณรวมสุทธิ
+              </span>
+              <span class="text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full">สรุปภาพรวม</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-center">
+              <div class="bg-white/10 p-2 rounded-xl border border-white/10">
+                <span class="text-[10px] text-indigo-200 font-bold block">งบประมาณทั้งหมด</span>
+                <p id="detailTotalAllocatedText" class="text-sm sm:text-base font-extrabold text-white tracking-tight">0 ฿</p>
+              </div>
+              <div class="bg-indigo-600/80 p-2 rounded-xl border border-indigo-400/30">
+                <span class="text-[10px] text-indigo-100 font-bold block">คงเหลือทั้งหมด</span>
+                <p id="detailTotalBalanceText" class="text-base sm:text-lg font-black text-amber-300 tracking-tight">0 ฿</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+          <h3 class="font-extrabold text-xs sm:text-sm text-slate-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-list-check text-indigo-600"></i> ประวัติรายการเบิกจ่าย
+          </h3>
+          <span id="detailCountBadge" class="text-[11px] bg-white border border-slate-200 text-slate-700 px-2.5 py-0.5 rounded-full font-bold">0 รายการ</span>
+        </div>
+
+        <div class="hidden sm:block max-h-[calc(100vh-320px)] overflow-y-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead class="sticky top-0 z-20 bg-slate-100 text-slate-900 font-black border-b border-slate-200 shadow-sm">
+              <tr>
+                <th class="py-2.5 px-3.5 w-20 bg-slate-100">ปีงบ</th>
+                <th class="py-2.5 px-3.5 w-28 bg-slate-100">วันที่</th>
+                <th class="py-2.5 px-3.5 bg-slate-100">ชื่อโครงการ / รายการ</th>
+                <th class="py-2.5 px-3.5 w-44 bg-slate-100">ประเภท</th>
+                <th class="py-2.5 px-3.5 text-right w-32 bg-slate-100">จำนวนเงิน</th>
+                <th class="py-2.5 px-3.5 bg-slate-100">หมายเหตุ</th>
+                <th id="detailActionColHeader" class="py-2.5 px-3.5 text-center w-24 bg-slate-100 hidden">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="detailTableBody" class="divide-y divide-slate-100 font-bold text-slate-800"></tbody>
+          </table>
+        </div>
+
+        <div id="detailMobileCardContainer" class="sm:hidden p-3 space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto custom-scrollbar"></div>
+      </div>
+
+    </section>
+
+    <!-- TAB 4: DASHBOARD / ANALYTICS -->
+    <section id="tabDashboard" class="hidden space-y-4 sm:space-y-5">
+      
+      <!-- Key Executive KPI Indicators -->
+      <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[11px] font-extrabold text-slate-500 block">จำนวนพื้นที่ดูแล</span>
+          <p id="dashVillageTotalCountText" class="text-base sm:text-lg font-black text-slate-900 mt-1">0 หมู่บ้าน</p>
+          <span class="text-[10px] text-emerald-600 font-extrabold mt-1"><i class="fa-solid fa-circle-check"></i> ครอบคลุมทั้งหมด</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[11px] font-extrabold text-slate-500 block">อัตราการเบิกใช้รวม</span>
+          <p id="dashSpendRate" class="text-base sm:text-lg font-black text-emerald-600 mt-1">0 %</p>
+          <span class="text-[10px] text-slate-500 font-bold mt-1">เทียบงบจัดสรร</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[11px] font-extrabold text-rose-600 block">เฝ้าระวัง (<20,000฿)</span>
+          <p id="dashLowBudgetCount" class="text-base sm:text-lg font-black text-rose-600 mt-1">0 หมู่บ้าน</p>
+          <span class="text-[10px] text-rose-600 font-bold mt-1">งบใกล้หมด</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[11px] font-extrabold text-indigo-600 block">งบพัฒนาหมู่บ้าน</span>
+          <p id="dashVillageAllocatedTotalText" class="text-base sm:text-lg font-black text-indigo-700 mt-1">0 ฿</p>
+          <span class="text-[10px] text-slate-500 font-bold mt-1">ยอดจัดสรรรวม</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[11px] font-extrabold text-sky-600 block">งบซ่อมแซมเครื่องจักร</span>
+          <p id="dashRepairAllocatedTotalText" class="text-base sm:text-lg font-black text-sky-700 mt-1">0 ฿</p>
+          <span class="text-[10px] text-slate-500 font-bold mt-1">ยอดจัดสรรรวม</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[11px] font-extrabold text-amber-600 block">คงเหลือคลังกลาง</span>
+          <p id="dashTreasuryBalanceText" class="text-base sm:text-lg font-black text-amber-600 mt-1">0 ฿</p>
+          <span class="text-[10px] text-slate-500 font-bold mt-1">งบคลังกลาง</span>
+        </div>
+      </div>
+
+      <!-- Charts & Visual Analytics Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <h3 class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+            <i class="fa-solid fa-chart-pie text-indigo-600"></i> สัดส่วนงบประมาณตามประเภท
+          </h3>
+          <div class="h-64 flex items-center justify-center relative">
+            <canvas id="budgetStructureChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <h3 class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+            <i class="fa-solid fa-chart-bar text-rose-500"></i> 5 อันดับหน่วยงานเบิกใช้สูงสุด
+          </h3>
+          <div class="h-64 flex items-center justify-center relative">
+            <canvas id="topSpendersChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Health Comparative Bar -->
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <h3 class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-scale-balanced text-emerald-600"></i> สัดส่วนการกระจายงบคลังกลาง vs งบรวมทุกหมู่บ้าน
+        </h3>
+        <div class="space-y-4 pt-1">
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1.5">
+              <span class="text-slate-700">งบคลังกลาง (งบกลาง)</span>
+              <span id="dashTreasuryText" class="text-slate-900 font-black">0 ฿</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
+              <div id="dashTreasuryBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1.5">
+              <span id="dashVillagesTotalLabelText" class="text-slate-700">งบรวมทุกหมู่บ้าน</span>
+              <span id="dashVillagesText" class="text-slate-900 font-black">0 ฿</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
+              <div id="dashVillagesBar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: SHOW FULL PROJECT DETAILS -->
+  <div id="projectDetailsModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 my-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="text-base font-black text-slate-900 flex items-center">
+          <i class="fa-solid fa-folder-open text-indigo-600 mr-2"></i> รายละเอียดข้อมูลการยื่นคำขอ Easy Pass
+        </h3>
+        <button onclick="closeProjectDetailsModal()" class="text-slate-400 hover:text-slate-600 font-black text-2xl transition">&times;</button>
+      </div>
+      
+      <div id="projectDetailsModalContent" class="space-y-3.5 text-xs sm:text-sm"></div>
+
+      <div class="pt-3 text-right border-t border-slate-100">
+        <button onclick="closeProjectDetailsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-5 py-2 rounded-xl text-sm transition">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT VILLAGE (MASTER DATA) -->
+  <div id="villageModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 my-auto">
+      <div class="bg-slate-100 border-b border-slate-200 text-slate-900 px-4 py-3 flex justify-between items-center">
+        <h3 id="villageModalTitle" class="font-extrabold text-xs sm:text-sm flex items-center gap-2">
+          <i class="fa-solid fa-house-medical text-emerald-600"></i> เพิ่มหน่วยงาน / หมู่บ้านใหม่
+        </h3>
+        <button onclick="closeVillageModal()" class="text-slate-400 hover:text-slate-700 p-1 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="villageForm" onsubmit="handleVillageFormSubmit(event)" class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="villageIsEdit" value="false">
+
+        <div>
+          <label class="block font-bold text-slate-800 mb-1">รหัสหมู่บ้าน (ID) <span class="text-rose-500">*</span></label>
+          <input type="number" id="villageModalId" min="0" placeholder="เช่น 29" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+          <p class="text-[10px] text-slate-500 font-semibold mt-1">* ID ลำดับถัดไปของหมู่บ้านใหม่ (ตัวเลขเท่านั้น)</p>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-800 mb-1">ชื่อหน่วยงาน / หมู่บ้าน <span class="text-rose-500">*</span></label>
+          <input type="text" id="villageModalName" placeholder="เช่น บ้านป่าไม้" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-800 mb-1">สถานะการใช้งาน <span class="text-rose-500">*</span></label>
+          <select id="villageModalStatus" required class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+            <option value="ACTIVE">🟢 เปิดใช้งานปกติ (ACTIVE)</option>
+            <option value="INACTIVE">🔴 ปิดใช้งานชั่วคราว (INACTIVE)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-800 mb-1">หมายเหตุ</label>
+          <input type="text" id="villageModalRemarks" placeholder="ระบุข้อความถ้ามี" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeVillageModal()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition">ยกเลิก</button>
+          <button type="submit" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm transition">บันทึกข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT TRANSACTION -->
+  <div id="formModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 my-auto">
+      
+      <div class="bg-slate-100 border-b border-slate-200 text-slate-900 px-4 py-3 flex justify-between items-center">
+        <h3 id="formModalTitle" class="font-extrabold text-xs sm:text-sm flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-amber-600"></i> บันทึกรายการใหม่
+        </h3>
+        <button onclick="closeFormModal()" class="text-slate-400 hover:text-slate-700 p-1 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="txForm" onsubmit="handleFormSubmit(event)" class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="formTxId" value="">
+        <input type="hidden" id="formVillageId" required>
+
+        <div id="formVillageSection" class="space-y-1">
+          <label class="block font-bold text-slate-800">ระบุหมู่บ้าน / งบคลัง <span class="text-rose-500">*</span></label>
+          <input type="text" id="villageSearchInput" placeholder="พิมพ์ชื่อเพื่อค้นหา..." oninput="filterFormVillageList()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+          <div id="formVillageList" class="border border-slate-200 rounded-xl max-h-28 overflow-y-auto divide-y divide-slate-100 custom-scrollbar mt-1"></div>
+        </div>
+
+        <div id="selectedVillageBox" class="bg-indigo-50 border border-indigo-200 p-2.5 rounded-xl flex items-center justify-between">
+          <span class="text-slate-600 font-bold">หน่วยงานที่เลือก:</span>
+          <span id="selectedVillageLabel" class="font-extrabold text-indigo-700">ยังไม่ได้เลือก</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-bold text-slate-800 mb-1">วันที่รายการ <span class="text-rose-500">*</span></label>
+            <input type="date" id="formDate" required class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-800 mb-1">ประเภทรายการ <span class="text-rose-500">*</span></label>
+            <select id="formType" required class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+              <option value="ADD_VILLAGE">🟢 1. เพิ่มงบประมาณหมู่บ้าน</option>
+              <option value="EXPENSE_VILLAGE">🔴 2. เบิกจ่ายงบประมาณหมู่บ้าน</option>
+              <option value="ADD_REPAIR">🔵 3. เพิ่มงบปรับปรุงซ่อมแซม</option>
+              <option value="EXPENSE_REPAIR">🟠 4. เบิกจ่ายงบปรับปรุงซ่อมแซม</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-800 mb-1">ชื่อโครงการ / รายการ <span class="text-rose-500">*</span></label>
+          <input type="text" id="formProject" placeholder="เช่น ซ่อมแซมระบบประปาหมู่บ้าน" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-800 mb-1">จำนวนเงิน (บาท) <span class="text-rose-500">*</span></label>
+          <input type="number" id="formAmount" min="0.01" step="any" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+        </div>
+
+        <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200 space-y-1.5">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="formIsNextYear" onchange="toggleNextYearOption(this.checked)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+            <span class="font-extrabold text-amber-950 text-xs">ยืมเงินงบประมาณปีถัดไป</span>
+          </label>
+          <div id="nextYearOptionBox" class="hidden pl-6 space-y-1">
+            <label class="block text-slate-700 font-bold text-[11px]">เลือกปีงบประมาณที่ต้องการผูกมัด:</label>
+            <select id="formTargetYear" class="w-full px-2 py-1 bg-white border border-amber-300 rounded-lg text-xs font-black text-amber-900">
+              <option value="2570">ปีงบประมาณ 2570</option>
+              <option value="2571">ปีงบประมาณ 2571</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-800 mb-1">หมายเหตุเพิ่มเติม</label>
+          <input type="text" id="formNote" placeholder="ระบุข้อความถ้ามี" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeFormModal()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition">ยกเลิก</button>
+          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm transition">บันทึกรายการ</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- MODAL: ADMIN LOGIN -->
+  <div id="loginModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xs w-full p-6 text-center border border-slate-200">
+      <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-lg border border-indigo-100">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h3 class="font-extrabold text-slate-900 text-base mb-0.5">สิทธิ์ผู้ดูแลระบบ</h3>
+      <p class="text-xs font-bold text-slate-500 mb-4">กรอกรหัส PIN เพื่อปลดล็อกการจัดการ</p>
+      
+      <input type="password" id="adminPinInput" placeholder="••••••" maxlength="10" class="w-full border border-slate-300 bg-slate-50 rounded-2xl p-2.5 text-center text-xl font-mono tracking-widest focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:outline-none mb-4 font-bold">
+      
+      <div class="flex gap-2 text-xs font-bold">
+        <button onclick="closeLoginModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition">ยกเลิก</button>
+        <button onclick="submitLogin()" class="w-1/2 py-2.5 bg-indigo-600 text-white rounded-xl shadow-md hover:bg-indigo-700 transition">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP STATE & LOGIC ENGINE -->
+  <script>
+    // URL ของ Google Apps Script Web App Engine
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbx5j7tZvVEWVaQ3cT9iiPsuy-v-CMiCJcacCbMDH7gpbq-WxqM2uPrDCH1oWSbPuSjN/exec';
+
+    let MASTER_VILLAGES = [];
+    let currentAdminPin = sessionStorage.getItem('admin_pin') || null;
+    let currentSelectedVillageId = null;
+    let cachedSummaryData = [];
+    let pendingRequestsData = [];
+    let previousPendingCount = 0;
+    let currentVillageDetailList = [];
+
+    let budgetStructureChartObj = null;
+    let topSpendersChartObj = null;
+
+    // Helper ยิง API ติดต่อ GAS
+    async function callGASAPI(action, payload = {}, pin = null) {
+      try {
+        const response = await fetch(GAS_API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: action, pin: pin || currentAdminPin, payload: payload })
+        });
+        return await response.json();
+      } catch (err) {
+        console.error('GAS API Fetch Error:', err);
+        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'error');
+        throw err;
+      }
+    }
+
+    function formatThaiDateString(dateStr) {
+      if (!dateStr) return '-';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      const year = parseInt(parts[0], 10) + 543;
+      const monthIndex = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+      if (monthIndex < 0 || monthIndex > 11) return dateStr;
+      return `${day} ${thaiMonths[monthIndex]} ${year}`;
+    }
+
+    window.onload = function() {
+      const pinInput = document.getElementById('adminPinInput');
+      if (pinInput) {
+        pinInput.addEventListener('keyup', function(e) {
+          if (e.key === 'Enter') submitLogin();
+        });
+      }
+
+      // SWR Pattern: ดึง Cache จาก LocalStorage โชว์ทันที 0s
+      loadFromLocalStorageCache();
+
+      checkAdminState();
+      fetchMasterVillages();
+      fetchPendingEasyPassRequests(true);
+      startRealtimePolling();
+    };
+
+    function loadFromLocalStorageCache() {
+      const cachedVillages = localStorage.getItem('cache_master_villages');
+      const cachedSummary = localStorage.getItem('cache_budget_summary');
+
+      if (cachedVillages) {
+        MASTER_VILLAGES = JSON.parse(cachedVillages);
+        populateFormVillageList();
+      }
+      if (cachedSummary) {
+        cachedSummaryData = JSON.parse(cachedSummary);
+        renderSummaryUI(cachedSummaryData);
+        renderDashboardUI(cachedSummaryData);
+      }
+    }
+
+    function startRealtimePolling() {
+      setInterval(() => {
+        fetchPendingEasyPassRequests(false);
+      }, 10000);
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const isSuccess = type === 'success';
+      
+      toast.className = `pointer-events-auto p-3.5 rounded-2xl border shadow-xl flex items-center gap-3 transform transition-all duration-300 translate-y-2 opacity-0 text-xs font-extrabold ${
+        isSuccess ? 'bg-slate-900 text-white border-slate-800' : 'bg-rose-600 text-white border-rose-700'
+      }`;
+
+      toast.innerHTML = `
+        <i class="fa-solid ${isSuccess ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-white'} text-base"></i>
+        <span class="flex-1">${message}</span>
+      `;
+
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    async function fetchMasterVillages() {
+      try {
+        const list = await callGASAPI('getMasterVillages');
+        MASTER_VILLAGES = list || [];
+        localStorage.setItem('cache_master_villages', JSON.stringify(MASTER_VILLAGES));
+        
+        const countVillagesOnly = MASTER_VILLAGES.filter(v => v.id !== 0).length;
+        document.getElementById('headerVillageCountSubtitle').innerText = `${countVillagesOnly} หมู่บ้าน + 1 งบคลังกลาง`;
+        populateFormVillageList();
+        loadSystemSummaryData();
+      } catch (e) {}
+    }
+
+    function checkAdminState() {
+      const isAuth = !!currentAdminPin;
+      document.getElementById('btnLogin').classList.toggle('hidden', isAuth);
+      document.getElementById('adminActiveBadge').classList.toggle('hidden', !isAuth);
+      document.getElementById('btnNewRecord').classList.toggle('hidden', !isAuth);
+      document.getElementById('btnVillageAddRecord').classList.toggle('hidden', !isAuth);
+      document.getElementById('btnManageVillagesAdmin').classList.toggle('hidden', !isAuth);
+      
+      const actionHeader = document.getElementById('detailActionColHeader');
+      if (actionHeader) actionHeader.classList.toggle('hidden', !isAuth);
+
+      renderPendingRequestsUI();
+      if (currentSelectedVillageId !== null) fetchVillageDetailData();
+    }
+
+    function handleGlobalYearChange() {
+      loadSystemSummaryData();
+      if (currentSelectedVillageId !== null) fetchVillageDetailData();
+    }
+
+    function switchMainTab(tab) {
+      document.getElementById('tabSummary').classList.add('hidden');
+      document.getElementById('tabPending').classList.add('hidden');
+      document.getElementById('tabDetail').classList.add('hidden');
+      document.getElementById('tabDashboard').classList.add('hidden');
+
+      if (tab === 'summary') {
+        document.getElementById('tabSummary').classList.remove('hidden');
+        currentSelectedVillageId = null;
+      } else if (tab === 'pending') {
+        document.getElementById('tabPending').classList.remove('hidden');
+        fetchPendingEasyPassRequests(true);
+      } else if (tab === 'dashboard') {
+        document.getElementById('tabDashboard').classList.remove('hidden');
+        renderDashboardUI(cachedSummaryData);
+      }
+
+      document.getElementById('navBtnSummary').className = tab === 'summary' 
+        ? "px-4 py-1.5 rounded-lg text-indigo-700 bg-white shadow-sm transition-all duration-200 font-black"
+        : "px-4 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-white/60 transition-all duration-200";
+
+      document.getElementById('navBtnPending').className = tab === 'pending'
+        ? "px-4 py-1.5 rounded-lg text-indigo-700 bg-white shadow-sm transition-all duration-200 font-black relative"
+        : "px-4 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-white/60 transition-all duration-200 relative";
+
+      document.getElementById('navBtnDashboard').className = tab === 'dashboard'
+        ? "px-4 py-1.5 rounded-lg text-indigo-700 bg-white shadow-sm transition-all duration-200 font-black"
+        : "px-4 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-white/60 transition-all duration-200";
+
+      document.getElementById('navBtnSummaryMob').className = tab === 'summary'
+        ? "px-2.5 py-1 rounded-lg text-indigo-700 bg-white shadow-sm font-black transition"
+        : "px-2.5 py-1 rounded-lg text-slate-600 font-bold hover:text-indigo-600 transition";
+
+      document.getElementById('navBtnPendingMob').className = tab === 'pending'
+        ? "px-2.5 py-1 rounded-lg text-indigo-700 bg-white shadow-sm font-black transition relative"
+        : "px-2.5 py-1 rounded-lg text-slate-600 font-bold hover:text-indigo-600 transition relative";
+
+      document.getElementById('navBtnDashboardMob').className = tab === 'dashboard'
+        ? "px-2.5 py-1 rounded-lg text-indigo-700 bg-white shadow-sm font-black transition"
+        : "px-2.5 py-1 rounded-lg text-slate-600 font-bold hover:text-indigo-600 transition";
+    }
+
+    function openVillageModalForCreate() {
+      document.getElementById('villageForm').reset();
+      document.getElementById('villageIsEdit').value = "false";
+      document.getElementById('villageModalId').disabled = false;
+      
+      const nextId = MASTER_VILLAGES.length > 0 ? Math.max(...MASTER_VILLAGES.map(v => v.id)) + 1 : 1;
+      document.getElementById('villageModalId').value = nextId;
+
+      document.getElementById('villageModalTitle').innerHTML = `<i class="fa-solid fa-house-medical text-emerald-600"></i> เพิ่มหน่วยงาน / หมู่บ้านใหม่`;
+      document.getElementById('villageModal').classList.remove('hidden');
+      document.getElementById('villageModal').classList.add('flex');
+    }
+
+    function closeVillageModal() {
+      document.getElementById('villageModal').classList.add('hidden');
+      document.getElementById('villageModal').classList.remove('flex');
+    }
+
+    async function handleVillageFormSubmit(e) {
+      e.preventDefault();
+      if (!currentAdminPin) return showToast('กรุณาเข้าสู่ระบบ Admin ก่อนดำเนินการ', 'error');
+
+      const payload = {
+        id: document.getElementById('villageModalId').value,
+        name: document.getElementById('villageModalName').value,
+        status: document.getElementById('villageModalStatus').value,
+        remarks: document.getElementById('villageModalRemarks').value,
+        isEdit: document.getElementById('villageIsEdit').value === "true"
+      };
+
+      try {
+        const res = await callGASAPI('saveVillage', payload);
+        closeVillageModal();
+        showToast(res.message || 'บันทึกสำเร็จ');
+        fetchMasterVillages();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function loadSystemSummaryData() {
+      const selectedYear = document.getElementById('globalYearSelect').value;
+      try {
+        const res = await callGASAPI('getBudgetSummary', { fiscalYear: selectedYear });
+        onSummaryLoaded(res);
+      } catch (e) {}
+    }
+
+    function onSummaryLoaded(res) {
+      cachedSummaryData = res.data || [];
+      localStorage.setItem('cache_budget_summary', JSON.stringify(cachedSummaryData));
+      renderSummaryUI(cachedSummaryData);
+      renderDashboardUI(cachedSummaryData);
+      if (currentSelectedVillageId !== null) updateDetailHeaderAmounts();
+    }
+
+    function renderSummaryUI(data) {
+      const tbody = document.getElementById('summaryTableBody');
+      const cardContainer = document.getElementById('summaryCardContainer');
+      tbody.innerHTML = '';
+      cardContainer.innerHTML = '';
+
+      let totAllocated = 0, totSpent = 0, totAdded = 0, totBalance = 0;
+
+      data.forEach(item => {
+        totAllocated += item.allocated;
+        totSpent += item.used;
+        totAdded += item.added;
+        totBalance += item.balance;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition cursor-pointer border-b border-slate-100";
+        tr.onclick = () => openDetailPage(item.id, item.name);
+        tr.innerHTML = `
+          <td class="py-3 px-4 text-center font-mono font-bold text-slate-400">${item.id}</td>
+          <td class="py-3 px-4 font-bold text-slate-900">${item.name}</td>
+          <td class="py-3 px-4 text-right font-extrabold text-rose-600">${item.used ? item.used.toLocaleString() + ' ฿' : '-'}</td>
+          <td class="py-3 px-4 text-right font-extrabold text-emerald-600">${item.added ? item.added.toLocaleString() + ' ฿' : '-'}</td>
+          <td class="py-3 px-4 text-right font-extrabold text-amber-600">${item.reduced ? item.reduced.toLocaleString() + ' ฿' : '-'}</td>
+          <td class="py-3 px-4 text-right font-black text-indigo-700 text-sm">${item.balance.toLocaleString()} ฿</td>
+          <td class="py-3 px-4 text-center">
+            <span class="text-xs text-indigo-600 hover:text-indigo-800 font-extrabold inline-flex items-center gap-1">
+              ดูข้อมูล <i class="fa-solid fa-chevron-right text-[10px]"></i>
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+
+        const card = document.createElement('div');
+        card.className = "bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2 cursor-pointer active:bg-slate-50 transition";
+        card.onclick = () => openDetailPage(item.id, item.name);
+        card.innerHTML = `
+          <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+            <span class="font-extrabold text-xs sm:text-sm text-slate-900">${item.id}. ${item.name}</span>
+            <span class="text-xs font-black text-indigo-700">${item.balance.toLocaleString()} ฿</span>
+          </div>
+          <div class="grid grid-cols-3 gap-1 text-[11px] text-slate-600 font-bold pt-0.5">
+            <div>ใช้ไป: <span class="font-black text-rose-600">${item.used ? item.used.toLocaleString() : '0'}</span></div>
+            <div>เพิ่ม: <span class="font-black text-emerald-600">${item.added ? item.added.toLocaleString() : '0'}</span></div>
+            <div>ลด: <span class="font-black text-amber-600">${item.reduced ? item.reduced.toLocaleString() : '0'}</span></div>
+          </div>
+        `;
+        cardContainer.appendChild(card);
+      });
+
+      document.getElementById('cardAllocated').innerText = totAllocated.toLocaleString() + ' ฿';
+      document.getElementById('cardSpent').innerText = totSpent.toLocaleString() + ' ฿';
+      document.getElementById('cardAdded').innerText = totAdded.toLocaleString() + ' ฿';
+      document.getElementById('cardBalance').innerText = totBalance.toLocaleString() + ' ฿';
+    }
+
+    async function fetchPendingEasyPassRequests(isManual = false) {
+      try {
+        const list = await callGASAPI('getPendingEasyPassRequests');
+        const newPendingList = list || [];
+        const currentCount = newPendingList.length;
+
+        if (!isManual && currentCount > previousPendingCount) {
+          showToast(`มีคำร้องตัดเงิน Easy Pass เข้ามาใหม่ ${currentCount - previousPendingCount} รายการ!`);
+        }
+
+        previousPendingCount = currentCount;
+        pendingRequestsData = newPendingList;
+        renderPendingRequestsUI();
+        updateNotificationWidget();
+      } catch (e) {}
+    }
+
+    function updateNotificationWidget() {
+      const count = pendingRequestsData.length;
+      document.getElementById('widgetCount').innerText = count;
+
+      if (count > 0 && currentAdminPin) {
+        document.getElementById('notificationWidget').classList.remove('hidden');
+      } else {
+        document.getElementById('notificationWidget').classList.add('hidden');
+      }
+    }
+
+    function renderPendingRequestsUI() {
+      const container = document.getElementById('pendingRequestsListContainer');
+      const badgeDesk = document.getElementById('badgePendingCount');
+      const badgeMob = document.getElementById('badgePendingCountMob');
+      
+      const count = pendingRequestsData.length;
+      badgeDesk.innerText = count;
+      badgeMob.innerText = count;
+      
+      if (count > 0) {
+        badgeDesk.classList.remove('hidden');
+        badgeMob.classList.remove('hidden');
+      } else {
+        badgeDesk.classList.add('hidden');
+        badgeMob.classList.add('hidden');
+      }
+
+      container.innerHTML = '';
+      if (count === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold text-sm">ไม่มีคำร้องตัดเงิน Easy Pass ค้างรอการอนุมัติในขณะนี้</div>`;
+        return;
+      }
+
+      pendingRequestsData.forEach((item) => {
+        const div = document.createElement('div');
+        div.className = "bg-slate-50 border border-slate-200 hover:border-indigo-400 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition cursor-pointer shadow-sm";
+        div.onclick = () => openProjectDetailsModalObj(item);
+        
+        div.innerHTML = `
+          <div class="space-y-1 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="font-extrabold text-slate-900 text-sm hover:underline flex items-center">
+                <i class="fa-solid fa-circle-info text-indigo-500 mr-1.5"></i> ${item.requestId} - หมู่ ${item.villageNo} ${item.villageName}
+              </span>
+              <span class="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">รออนุมัติตัดงบ</span>
+            </div>
+            <div class="text-slate-600 font-semibold"><b>TX Easy Pass:</b> ${item.easyPassTxId} | <b>ยื่นเมื่อ:</b> ${formatThaiDateString(item.requestDate)}</div>
+          </div>
+
+          <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3 border-t sm:border-t-0 pt-2 sm:pt-0" onclick="event.stopPropagation()">
+            <div class="text-right">
+              <span class="text-[10px] text-slate-500 block font-bold">ยอดเงินขอตัดงบ (หมวดซ่อมแซม)</span>
+              <span class="text-base font-black text-emerald-700">${item.amount.toLocaleString()} ฿</span>
+            </div>
+            ${currentAdminPin ? `
+              <div class="flex items-center gap-1.5">
+                <button onclick="handleRejectPending(${item.rowIndex})" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold px-3 py-1.5 rounded-xl text-xs transition border border-rose-200">ปฏิเสธ</button>
+                <button onclick="handleApprovePending(${item.rowIndex}, '${item.easyPassTxId}', '${item.requestId}', ${item.villageNo}, '${item.villageName}', ${item.amount})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl text-xs shadow-sm transition">ยอมรับ & ตัดงบซ่อมแซม</button>
+              </div>
+            ` : '<span class="text-[11px] text-amber-700 font-bold italic">* เข้าสู่ระบบ Admin เพื่อกดยอมรับ</span>'}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function openProjectDetailsModalObj(item) {
+      if (!item) return;
+
+      const d = item.details || {};
+      const container = document.getElementById('projectDetailsModalContent');
+
+      container.innerHTML = `
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-black text-slate-900 text-base">${item.requestId}</span>
+            <span class="bg-indigo-100 text-indigo-900 font-extrabold px-3 py-0.5 rounded-full text-xs">Accepted</span>
+          </div>
+          <div><b class="text-slate-600">สถานที่ปฏิบัติงาน:</b> <span class="font-bold text-slate-900">หมู่ที่ ${item.villageNo} ${item.villageName}</span></div>
+          <div><b class="text-slate-600">ผู้ยื่นคำขอ:</b> <span class="font-bold text-slate-900">${d.requesterName || '-'} (${d.requesterPosition || '-'})</span></div>
+          <div><b class="text-slate-600">วันที่ยื่นระบบ:</b> ${formatThaiDateString(d.requestDate || item.requestDate)}</div>
+          <div><b class="text-slate-600">วันที่ขอใช้ตั้งต้น:</b> ${formatThaiDateString(d.reqStartDate)} ถึง ${formatThaiDateString(d.reqEndDate)}</div>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
+          <div class="font-black text-slate-900 border-b border-slate-200 pb-2 text-sm sm:text-base">รายละเอียดแผนงานและการอนุมัติ</div>
+          <div><b class="text-slate-600">ผู้อนุมัติ:</b> ${d.approvedBy || 'ผู้ดูแลระบบสูงสุด (Super Admin)'}</div>
+          <div><b class="text-slate-600">ช่วงวันตามแผนงาน:</b> ${formatThaiDateString(d.planStartDate)} ถึง ${formatThaiDateString(d.planEndDate)} (${d.planDays || 0} วัน)</div>
+          <div><b class="text-slate-600">เครื่องจักรกลที่จัดสรร:</b> <span class="font-bold text-amber-700">${d.assignedMachine || '-'}</span></div>
+          <div><b class="text-slate-600">ช่างผู้ปฏิบัติงาน:</b> <span class="font-bold text-blue-700">${d.assignedOperator || '-'}</span></div>
+          <div><b class="text-slate-600">น้ำมันประเมิน:</b> ${d.planFuelLiters || 0} ลิตร</div>
+        </div>
+
+        <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 space-y-1.5">
+          <div class="font-black text-emerald-950 border-b border-emerald-200 pb-2 text-sm sm:text-base">สถานะการปฏิบัติงานจริง</div>
+          <div><b class="text-slate-600">สถานะปัจจุบัน:</b> <span class="font-extrabold text-blue-700">${d.jobProgressStatus || 'ปฏิบัติงานแล้วเสร็จ'}</span></div>
+          <div><b class="text-slate-600">ช่วงวันปฏิบัติงานจริง:</b> ${formatThaiDateString(d.actualStartDate)} ถึง ${formatThaiDateString(d.actualEndDate)} (${d.actualDays || 0} วัน)</div>
+          <div><b class="text-slate-600">น้ำมันใช้จริง:</b> ${d.actualFuelLiters || 0} ลิตร</div>
+          <div><b class="text-slate-600">ยอดเงินตัดงบ Easy Pass:</b> <span class="text-emerald-700 font-black text-base sm:text-lg">${item.amount.toLocaleString()} บาท (ตัดหมวดซ่อมแซม)</span></div>
+        </div>
+
+        ${d.docLink ? `
+          <div class="pt-1">
+            <a href="${d.docLink}" target="_blank" class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition shadow text-xs">
+              <i class="fa-solid fa-file-pdf mr-1.5"></i> เปิดดูเอกสาร / รูปภาพแนบ
+            </a>
+          </div>
+        ` : ''}
+      `;
+
+      document.getElementById('projectDetailsModal').classList.remove('hidden');
+      document.getElementById('projectDetailsModal').classList.add('flex');
+    }
+
+    function closeProjectDetailsModal() {
+      document.getElementById('projectDetailsModal').classList.add('hidden');
+      document.getElementById('projectDetailsModal').classList.remove('flex');
+    }
+
+    async function handleApprovePending(rowIndex, easyPassTxId, requestId, villageNo, villageName, amount) {
+      if (!confirm(`ยืนยันกดยอมรับคำร้องตัดงบประมาณ (หมวดซ่อมแซม) หมู่ ${villageNo} ${villageName} จำนวน ${amount.toLocaleString()} บาท?`)) return;
+
+      const reqData = {
+        rowIndex: rowIndex,
+        easyPassTxId: easyPassTxId,
+        requestId: requestId,
+        villageNo: villageNo,
+        villageName: villageName,
+        amount: amount
+      };
+
+      try {
+        const res = await callGASAPI('approveEasyPassRequest', reqData);
+        showToast(res.message || 'อนุมัติคำร้องเรียบร้อยแล้ว');
+        fetchPendingEasyPassRequests(true);
+        loadSystemSummaryData();
+        if (currentSelectedVillageId !== null) fetchVillageDetailData();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function handleRejectPending(rowIndex) {
+      if (!confirm('ยืนยันปฏิเสธคำร้องนี้?')) return;
+      try {
+        const res = await callGASAPI('rejectEasyPassRequest', { rowIndex: rowIndex });
+        showToast(res.message || 'ปฏิเสธคำร้องเรียบร้อยแล้ว');
+        fetchPendingEasyPassRequests(true);
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function filterSummaryRows() {
+      const q = document.getElementById('summarySearch').value.toLowerCase();
+      const filtered = cachedSummaryData.filter(d => d.name.toLowerCase().includes(q) || String(d.id).includes(q));
+      renderSummaryUI(filtered);
+    }
+
+    function openDetailPage(villageId, villageName) {
+      currentSelectedVillageId = villageId;
+      document.getElementById('detailVillageTitle').innerText = villageName;
+      document.getElementById('detailVillageBadge').innerText = villageId === 0 ? "งบคลังกลาง" : `หมู่บ้านที่ ${villageId}`;
+
+      document.getElementById('tabSummary').classList.add('hidden');
+      document.getElementById('tabPending').classList.add('hidden');
+      document.getElementById('tabDashboard').classList.add('hidden');
+      document.getElementById('tabDetail').classList.remove('hidden');
+
+      updateDetailHeaderAmounts();
+      fetchVillageDetailData();
+    }
+
+    function updateDetailHeaderAmounts() {
+      const v = cachedSummaryData.find(d => String(d.id) === String(currentSelectedVillageId)) || {
+        village_allocated: 0, village_used: 0, village_balance: 0, repair_allocated: 0, repair_used: 0, repair_balance: 0, total_allocated: 0, total_balance: 0
+      };
+
+      document.getElementById('detailVillageAllocatedText').innerText = (v.village_allocated || 0).toLocaleString() + ' ฿';
+      document.getElementById('detailVillageUsedText').innerText = (v.village_used || 0).toLocaleString() + ' ฿';
+      document.getElementById('detailVillageBalanceText').innerText = (v.village_balance || 0).toLocaleString() + ' ฿';
+
+      document.getElementById('detailRepairAllocatedText').innerText = (v.repair_allocated || 0).toLocaleString() + ' ฿';
+      document.getElementById('detailRepairUsedText').innerText = (v.repair_used || 0).toLocaleString() + ' ฿';
+      document.getElementById('detailRepairBalanceText').innerText = (v.repair_balance || 0).toLocaleString() + ' ฿';
+
+      document.getElementById('detailTotalAllocatedText').innerText = (v.total_allocated || 0).toLocaleString() + ' ฿';
+      document.getElementById('detailTotalBalanceText').innerText = (v.total_balance || 0).toLocaleString() + ' ฿';
+    }
+
+    async function fetchVillageDetailData() {
+      const year = document.getElementById('globalYearSelect').value;
+      try {
+        const list = await callGASAPI('getVillageDetails', { villageId: currentSelectedVillageId, fiscalYear: year });
+        renderDetailListUI(list);
+      } catch (e) {}
+    }
+
+    function renderDetailListUI(list) {
+      currentVillageDetailList = list || [];
+      const tbody = document.getElementById('detailTableBody');
+      const mobileContainer = document.getElementById('detailMobileCardContainer');
+      const badge = document.getElementById('detailCountBadge');
+      const isAuth = !!currentAdminPin;
+      
+      tbody.innerHTML = '';
+      mobileContainer.innerHTML = '';
+      badge.innerText = `${list ? list.length : 0} รายการ`;
+
+      const colSpan = isAuth ? 7 : 6;
+
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center py-8 text-slate-400 font-bold">ไม่พบข้อมูลประวัติรายการเบิกจ่าย</td></tr>`;
+        mobileContainer.innerHTML = `<p class="text-center py-8 text-slate-400 font-bold text-xs">ไม่พบข้อมูลประวัติรายการเบิกจ่าย</p>`;
+        return;
+      }
+
+      list.forEach((item, index) => {
+        let typeBadge = '';
+        if (item.type === 'ADD_VILLAGE' || item.type === 'ADD') {
+          typeBadge = '<span class="bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold px-2 py-0.5 rounded text-[11px]">1. เพิ่มงบฯ หมู่บ้าน</span>';
+        } else if (item.type === 'EXPENSE_VILLAGE' || item.type === 'EXPENSE') {
+          typeBadge = '<span class="bg-rose-50 text-rose-800 border border-rose-300 font-bold px-2 py-0.5 rounded text-[11px]">2. เบิกจ่ายงบฯ หมู่บ้าน</span>';
+        } else if (item.type === 'ADD_REPAIR') {
+          typeBadge = '<span class="bg-sky-50 text-sky-800 border border-sky-300 font-bold px-2 py-0.5 rounded text-[11px]">3. เพิ่มงบซ่อมแซม</span>';
+        } else if (item.type === 'EXPENSE_REPAIR') {
+          typeBadge = '<span class="bg-amber-50 text-amber-800 border border-amber-300 font-bold px-2 py-0.5 rounded text-[11px]">4. เบิกจ่ายงบซ่อมแซม</span>';
+        } else if (item.type === 'REDUCE') {
+          typeBadge = '<span class="bg-amber-50 text-amber-800 border border-amber-300 font-bold px-2 py-0.5 rounded text-[11px]">ปรับลด</span>';
+        } else {
+          typeBadge = `<span class="bg-slate-100 text-slate-800 font-bold px-2 py-0.5 rounded text-[11px]">${item.type}</span>`;
+        }
+
+        const safeProjectName = (item.project_name || '').replace(/'/g, "\\'");
+        const safeNote = (item.note || '').replace(/'/g, "\\'");
+
+        let projectDisplayHtml = `<span class="font-extrabold text-slate-900">${item.project_name}</span>`;
+        if (item.easyPassDetail) {
+          projectDisplayHtml = `
+            <button onclick="openHistoryEasyPassModal(${index})" class="font-extrabold text-indigo-700 hover:text-indigo-900 hover:underline text-left cursor-pointer transition">
+              ${item.project_name}
+            </button>
+          `;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+        
+        let actionColHtml = '';
+        if (isAuth) {
+          actionColHtml = `
+            <td class="py-2.5 px-3.5 text-center space-x-1">
+              <button onclick="editTx('${item.id}', '${item.village_id}', '${item.date}', '${item.type}', '${safeProjectName}', ${item.amount}, ${item.is_advance_borrow}, '${item.source_fiscal_year}', '${safeNote}')" class="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition border border-indigo-200" title="แก้ไข">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </button>
+              <button onclick="deleteTx('${item.id}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition border border-rose-200" title="ลบ">
+                <i class="fa-solid fa-trash text-xs"></i>
+              </button>
+            </td>
+          `;
+        }
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-3.5 font-mono font-bold text-slate-400">${item.fiscal_year}</td>
+          <td class="py-2.5 px-3.5 font-mono font-bold text-slate-600">${item.date}</td>
+          <td class="py-2.5 px-3.5">${projectDisplayHtml}</td>
+          <td class="py-2.5 px-3.5">${typeBadge}</td>
+          <td class="py-2.5 px-3.5 text-right font-black text-slate-900">${item.amount.toLocaleString()} ฿</td>
+          <td class="py-2.5 px-3.5 font-semibold text-slate-500">${item.note || '-'}</td>
+          ${actionColHtml}
+        `;
+        tbody.appendChild(tr);
+
+        const mobCard = document.createElement('div');
+        mobCard.className = "bg-white p-3.5 rounded-2xl border border-slate-200 space-y-2 text-xs shadow-sm";
+        mobCard.innerHTML = `
+          <div class="flex justify-between items-start gap-2">
+            <div>${projectDisplayHtml}</div>
+            <span class="font-black text-slate-900 shrink-0 text-sm">${item.amount.toLocaleString()} ฿</span>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-slate-500 font-bold pt-0.5">
+            <div class="flex items-center gap-1.5">
+              <span>ปี ${item.fiscal_year}</span>
+              <span>•</span>
+              <span>${item.date}</span>
+            </div>
+            <div>${typeBadge}</div>
+          </div>
+          ${item.note ? `<p class="text-[11px] text-slate-600 italic bg-slate-50 p-2 rounded-xl border border-slate-200 font-semibold">${item.note}</p>` : ''}
+          ${isAuth ? `
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button onclick="editTx('${item.id}', '${item.village_id}', '${item.date}', '${item.type}', '${safeProjectName}', ${item.amount},${item.is_advance_borrow}, '${item.source_fiscal_year}', '${safeNote}')" class="text-indigo-600 hover:bg-indigo-100 font-bold px-3 py-1 bg-indigo-50 rounded-lg flex items-center gap-1 transition">
+                <i class="fa-solid fa-pen text-[10px]"></i> แก้ไข
+              </button>
+              <button onclick="deleteTx('${item.id}')" class="text-rose-600 hover:bg-rose-100 font-bold px-3 py-1 bg-rose-50 rounded-lg flex items-center gap-1 transition">
+                <i class="fa-solid fa-trash text-[10px]"></i> ลบ
+              </button>
+            </div>
+          ` : ''}
+        `;
+        mobileContainer.appendChild(mobCard);
+      });
+    }
+
+    function openHistoryEasyPassModal(index) {
+      const item = currentVillageDetailList[index];
+      if (item && item.easyPassDetail) {
+        openProjectDetailsModalObj(item.easyPassDetail);
+      }
+    }
+
+    function closeDetailPage() {
+      switchMainTab('summary');
+      loadSystemSummaryData();
+    }
+
+    function renderDashboardUI(data) {
+      if (!data || data.length === 0) return;
+
+      const villagesOnly = data.filter(d => d.id !== 0);
+      const lowBudget = villagesOnly.filter(d => d.balance < 20000).length;
+      
+      document.getElementById('dashVillageTotalCountText').innerText = `${villagesOnly.length} หมู่บ้าน`;
+      document.getElementById('dashLowBudgetCount').innerText = `${lowBudget} หมู่บ้าน`;
+
+      const totAllocated = data.reduce((acc, d) => acc + d.allocated, 0);
+      const totSpent = data.reduce((acc, d) => acc + d.used, 0);
+      const rate = totAllocated > 0 ? ((totSpent / totAllocated) * 100).toFixed(1) : '0';
+      document.getElementById('dashSpendRate').innerText = `${rate} %`;
+
+      const totVillageAllocated = villagesOnly.reduce((acc, d) => acc + (d.village_allocated || 0), 0);
+      const totRepairAllocated = villagesOnly.reduce((acc, d) => acc + (d.repair_allocated || 0), 0);
+      const treasury = data.find(d => d.id === 0) || { balance: 0 };
+      const villagesTotBalance = villagesOnly.reduce((acc, d) => acc + d.balance, 0);
+
+      document.getElementById('dashVillageAllocatedTotalText').innerText = totVillageAllocated.toLocaleString() + ' ฿';
+      document.getElementById('dashRepairAllocatedTotalText').innerText = totRepairAllocated.toLocaleString() + ' ฿';
+      document.getElementById('dashTreasuryBalanceText').innerText = treasury.balance.toLocaleString() + ' ฿';
+
+      document.getElementById('dashTreasuryText').innerText = treasury.balance.toLocaleString() + ' ฿';
+      document.getElementById('dashVillagesTotalLabelText').innerText = `งบรวม ${villagesOnly.length} หมู่บ้าน`;
+      document.getElementById('dashVillagesText').innerText = villagesTotBalance.toLocaleString() + ' ฿';
+
+      const grandTot = Math.max(0, treasury.balance) + Math.max(0, villagesTotBalance);
+      const tPct = grandTot > 0 ? Math.round((Math.max(0, treasury.balance) / grandTot) * 100) : 0;
+      const vPct = grandTot > 0 ? Math.round((Math.max(0, villagesTotBalance) / grandTot) * 100) : 0;
+
+      document.getElementById('dashTreasuryBar').style.width = `${tPct}%`;
+      document.getElementById('dashVillagesBar').style.width = `${vPct}%`;
+
+      renderBudgetStructureChart(totVillageAllocated, totRepairAllocated, treasury.balance);
+      renderTopSpendersChart(villagesOnly);
+    }
+
+    function renderBudgetStructureChart(vAllocated, rAllocated, tBalance) {
+      const ctx = document.getElementById('budgetStructureChart');
+      if (!ctx) return;
+      if (budgetStructureChartObj) budgetStructureChartObj.destroy();
+
+      budgetStructureChartObj = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['งบพัฒนาหมู่บ้าน', 'งบซ่อมแซมเครื่องจักร', 'คงเหลือคลังกลาง'],
+          datasets: [{
+            data: [vAllocated, rAllocated, Math.max(0, tBalance)],
+            backgroundColor: ['#4f46e5', '#0284c7', '#d97706'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { family: 'Sarabun', size: 11, weight: 'bold' }, boxWidth: 12 } },
+            tooltip: {
+              callbacks: {
+                label: function(context) { return ` ${context.label}: ${context.raw.toLocaleString()} บาท`; }
+              }
+            }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+    function renderTopSpendersChart(villagesOnly) {
+      const ctx = document.getElementById('topSpendersChart');
+      if (!ctx) return;
+
+      const topSpenders = [...villagesOnly].sort((a, b) => b.used - a.used).slice(0, 5);
+      const labels = topSpenders.map(d => d.name);
+      const values = topSpenders.map(d => d.used);
+
+      if (topSpendersChartObj) topSpendersChartObj.destroy();
+
+      topSpendersChartObj = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'เบิกจ่ายแล้ว (บาท)',
+            data: values,
+            backgroundColor: '#e11d48',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) { return ` เบิกจ่าย: ${context.raw.toLocaleString()} บาท`; }
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 10, weight: 'bold' } } },
+            y: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 11, weight: 'bold' } } }
+          }
+        }
+      });
+    }
+
+    function populateFormVillageList(filterText = '') {
+      const container = document.getElementById('formVillageList');
+      container.innerHTML = '';
+      MASTER_VILLAGES.forEach(v => {
+        const label = `${v.id} - ${v.name}`;
+        if (!filterText || label.toLowerCase().includes(filterText.toLowerCase())) {
+          const div = document.createElement('div');
+          div.className = "p-2 hover:bg-indigo-50 cursor-pointer text-slate-800 font-bold transition flex justify-between items-center";
+          div.innerHTML = `<span>${label}</span> <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>`;
+          div.onclick = () => selectFormVillage(v.id, label);
+          container.appendChild(div);
+        }
+      });
+    }
+
+    function selectFormVillage(id, label) {
+      document.getElementById('formVillageId').value = id;
+      document.getElementById('selectedVillageLabel').innerText = label;
+    }
+
+    function filterFormVillageList() {
+      const txt = document.getElementById('villageSearchInput').value;
+      populateFormVillageList(txt);
+    }
+
+    function openFormModal() {
+      document.getElementById('txForm').reset();
+      document.getElementById('formTxId').value = '';
+      document.getElementById('formVillageId').value = '';
+      document.getElementById('selectedVillageLabel').innerText = 'ยังไม่ได้เลือก';
+      document.getElementById('formVillageSection').classList.remove('hidden');
+      document.getElementById('formDate').value = new Date().toISOString().split('T')[0];
+      
+      document.getElementById('formIsNextYear').checked = false;
+      toggleNextYearOption(false);
+
+      document.getElementById('formModalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-600"></i> บันทึกรายการใหม่`;
+      document.getElementById('formModal').classList.remove('hidden');
+      document.getElementById('formModal').classList.add('flex');
+    }
+
+    function openFormModalForCurrentVillage() {
+      if (currentSelectedVillageId === null) return;
+      openFormModal();
+      const v = MASTER_VILLAGES.find(item => String(item.id) === String(currentSelectedVillageId));
+      if (v) selectFormVillage(v.id, `${v.id} - ${v.name}`);
+      document.getElementById('formVillageSection').classList.add('hidden');
+    }
+
+    function closeFormModal() {
+      document.getElementById('formModal').classList.add('hidden');
+      document.getElementById('formModal').classList.remove('flex');
+    }
+
+    function toggleNextYearOption(checked) {
+      document.getElementById('nextYearOptionBox').classList.toggle('hidden', !checked);
+    }
+
+    function editTx(id, vId, date, type, project, amount, isNextYear, targetYear, note) {
+      openFormModal();
+      document.getElementById('formTxId').value = id;
+      document.getElementById('formModalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-600"></i> แก้ไขรายการ`;
+      
+      const v = MASTER_VILLAGES.find(item => String(item.id) === String(vId));
+      if (v) selectFormVillage(v.id, `${v.id} - ${v.name}`);
+
+      document.getElementById('formDate').value = date;
+
+      let mappedType = type;
+      if (type === 'ADD') mappedType = 'ADD_VILLAGE';
+      else if (type === 'EXPENSE') mappedType = 'EXPENSE_VILLAGE';
+      
+      document.getElementById('formType').value = mappedType;
+      document.getElementById('formProject').value = project;
+      document.getElementById('formAmount').value = amount;
+      
+      const isBorrow = String(isNextYear) === 'true' || isNextYear === true;
+      document.getElementById('formIsNextYear').checked = isBorrow;
+      toggleNextYearOption(isBorrow);
+      if (isBorrow && targetYear) {
+        document.getElementById('formTargetYear').value = targetYear;
+      }
+      
+      document.getElementById('formNote').value = note || '';
+    }
+
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const vId = document.getElementById('formVillageId').value;
+      if (!vId && vId !== '0') return showToast('กรุณาระบุหมู่บ้านหรือหน่วยงานก่อนบันทึก', 'error');
+
+      const payload = {
+        tx_id: document.getElementById('formTxId').value,
+        village_id: vId,
+        date: document.getElementById('formDate').value,
+        type: document.getElementById('formType').value,
+        project_name: document.getElementById('formProject').value,
+        amount: Number(document.getElementById('formAmount').value),
+        is_advance_borrow: document.getElementById('formIsNextYear').checked,
+        target_fiscal_year: document.getElementById('formTargetYear').value,
+        note: document.getElementById('formNote').value
+      };
+
+      try {
+        const res = await callGASAPI('saveTransaction', payload);
+        closeFormModal();
+        showToast(res.message || 'บันทึกสำเร็จ');
+        if (currentSelectedVillageId !== null) fetchVillageDetailData();
+        loadSystemSummaryData();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function deleteTx(txId) {
+      if (!confirm('ยืนยันการลบรายการนี้ออกจากฐานข้อมูล?')) return;
+      try {
+        const res = await callGASAPI('deleteTransaction', { txId: txId });
+        showToast(res.message || 'ลบรายการสำเร็จ');
+        if (currentSelectedVillageId !== null) fetchVillageDetailData();
+        loadSystemSummaryData();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function openLoginModal() { 
+      document.getElementById('loginModal').classList.remove('hidden'); 
+      document.getElementById('loginModal').classList.add('flex');
+      setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
+    }
+    
+    function closeLoginModal() { 
+      document.getElementById('loginModal').classList.add('hidden'); 
+      document.getElementById('loginModal').classList.remove('flex'); 
+    }
+
+    async function submitLogin() {
+      const pin = document.getElementById('adminPinInput').value;
+      try {
+        const res = await callGASAPI('verifyAdminPin', {}, pin);
+        if (res && res.success) {
+          currentAdminPin = pin;
+          sessionStorage.setItem('admin_pin', pin);
+          checkAdminState();
+          closeLoginModal();
+          showToast('ปลดล็อกสิทธิ์ Admin เรียบร้อยแล้ว');
+          loadSystemSummaryData();
+          fetchPendingEasyPassRequests(true);
+        } else {
+          showToast('รหัส PIN ไม่ถูกต้อง', 'error');
+        }
+      } catch (err) {
+        showToast('การยืนยันสิทธิ์ล้มเหลว', 'error');
+      }
+    }
+
+    function logoutAdmin() {
+      sessionStorage.removeItem('admin_pin');
+      currentAdminPin = null;
+      checkAdminState();
+      showToast('ออกจากระบบ Admin เรียบร้อยแล้ว');
+      loadSystemSummaryData();
+    }
+  </script>
+</body>
+</html>
