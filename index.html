@@ -85,9 +85,10 @@
             <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-indigo-600">
               <i class="fa-solid fa-globe text-xs"></i>
             </div>
+            <!-- ตั้งค่าเริ่มต้นเป็น ALL (รวมทุกปีงบประมาณ) -->
             <select id="globalYearSelect" onchange="handleGlobalYearChange()" class="w-full sm:w-auto bg-slate-100 hover:bg-slate-200/80 text-slate-900 border border-slate-300 rounded-xl pl-8 pr-8 py-2 text-xs sm:text-sm font-black focus:ring-2 focus:ring-indigo-500 focus:outline-none transition appearance-none cursor-pointer">
-              <option value="ALL">🌐 รวมทุกปีงบประมาณ</option>
-              <option value="2569" selected>ปีงบประมาณ 2569</option>
+              <option value="ALL" selected>🌐 รวมทุกปีงบประมาณ</option>
+              <option value="2569">ปีงบประมาณ 2569</option>
               <option value="2570">ปีงบประมาณ 2570</option>
               <option value="2571">ปีงบประมาณ 2571</option>
             </select>
@@ -651,7 +652,7 @@
     let budgetStructureChartObj = null;
     let topSpendersChartObj = null;
 
-    function showLoading(msg = 'กำลังโหลดข้อมูล...') {
+    function showLoading(msg = 'กำลังเชื่อมต่อเซิร์ฟเวอร์...') {
       document.getElementById('loadingText').innerText = msg;
       document.getElementById('loadingOverlay').classList.remove('hidden');
       document.getElementById('loadingOverlay').classList.add('flex');
@@ -662,7 +663,7 @@
       document.getElementById('loadingOverlay').classList.remove('flex');
     }
 
-    // Helper ยิง API ติดต่อ GAS พร้อม Timeout & Handling
+    // Helper ยิง API ติดต่อ GAS พร้อม Error Handling
     async function callGASAPI(action, payload = {}, pin = null) {
       try {
         const response = await fetch(GAS_API_URL, {
@@ -730,7 +731,7 @@
     function startRealtimePolling() {
       setInterval(() => {
         fetchPendingEasyPassRequests(false);
-      }, 25000); // ปรับเป็น 25s เพื่อประหยัด Quota
+      }, 25000);
     }
 
     function showToast(message, type = 'success') {
@@ -1204,15 +1205,16 @@
 
       list.forEach((item, index) => {
         let typeBadge = '';
-        if (item.type === 'ADD_VILLAGE' || item.type === 'ADD') {
+        const itemType = (item.type || '').toUpperCase();
+        if (itemType === 'ADD_VILLAGE' || itemType === 'ADD') {
           typeBadge = '<span class="bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold px-2 py-0.5 rounded text-[11px]">1. เพิ่มงบฯ หมู่บ้าน</span>';
-        } else if (item.type === 'EXPENSE_VILLAGE' || item.type === 'EXPENSE') {
+        } else if (itemType === 'EXPENSE_VILLAGE' || itemType === 'EXPENSE') {
           typeBadge = '<span class="bg-rose-50 text-rose-800 border border-rose-300 font-bold px-2 py-0.5 rounded text-[11px]">2. เบิกจ่ายงบฯ หมู่บ้าน</span>';
-        } else if (item.type === 'ADD_REPAIR') {
+        } else if (itemType === 'ADD_REPAIR') {
           typeBadge = '<span class="bg-sky-50 text-sky-800 border border-sky-300 font-bold px-2 py-0.5 rounded text-[11px]">3. เพิ่มงบซ่อมแซม</span>';
-        } else if (item.type === 'EXPENSE_REPAIR') {
+        } else if (itemType === 'EXPENSE_REPAIR') {
           typeBadge = '<span class="bg-amber-50 text-amber-800 border border-amber-300 font-bold px-2 py-0.5 rounded text-[11px]">4. เบิกจ่ายงบซ่อมแซม</span>';
-        } else if (item.type === 'REDUCE') {
+        } else if (itemType === 'REDUCE') {
           typeBadge = '<span class="bg-amber-50 text-amber-800 border border-amber-300 font-bold px-2 py-0.5 rounded text-[11px]">ปรับลด</span>';
         } else {
           typeBadge = `<span class="bg-slate-100 text-slate-800 font-bold px-2 py-0.5 rounded text-[11px]">${item.type}</span>`;
@@ -1583,11 +1585,10 @@
       loadSystemSummaryData();
     }
 
-    // EXPORT DATA TO CSV (EXCEL)
     function exportSummaryCSV() {
       if (!cachedSummaryData || cachedSummaryData.length === 0) return showToast('ไม่มีข้อมูลสำหรับส่งออก', 'error');
 
-      let csv = '\uFEFF'; // UTF-8 BOM
+      let csv = '\uFEFF';
       csv += "รหัส,ชื่อหน่วยงาน/หมู่บ้าน,งบจัดสรรรวม (บาท),งบปรับเพิ่ม (บาท),งบปรับลด (บาท),งบเบิกใช้แล้ว (บาท),งบคลังคงเหลือสุทธิ (บาท)\n";
 
       cachedSummaryData.forEach(item => {
