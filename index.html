@@ -31,6 +31,12 @@
 </head>
 <body class="h-full text-slate-900 bg-slate-50/60 flex flex-col antialiased selection:bg-indigo-500 selection:text-white relative pb-16 sm:pb-0">
 
+  <!-- FULLSCREEN LOADING OVERLAY -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center text-white transition-all">
+    <div class="w-14 h-14 border-4 border-indigo-400 border-t-white rounded-full animate-spin mb-3"></div>
+    <p id="loadingText" class="font-extrabold text-sm sm:text-base tracking-wide">กำลังเชื่อมต่อเซิร์ฟเวอร์...</p>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
@@ -171,6 +177,10 @@
         </div>
         
         <div class="flex items-center gap-2">
+          <button onclick="exportSummaryCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center gap-1.5 whitespace-nowrap border border-slate-200" title="ส่งออกเป็น Excel CSV">
+            <i class="fa-solid fa-file-excel text-emerald-600 text-xs sm:text-sm"></i> ส่งออก Excel
+          </button>
+
           <button id="btnNewRecord" onclick="openFormModal()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap">
             <i class="fa-solid fa-plus text-xs"></i> บันทึกรายการใหม่
           </button>
@@ -234,9 +244,14 @@
             <i class="fa-solid fa-arrow-left"></i> ย้อนกลับ
           </button>
           
-          <button id="btnVillageAddRecord" onclick="openFormModalForCurrentVillage()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition items-center gap-1.5">
-            <i class="fa-solid fa-plus text-xs"></i> บันทึกรายการเพิ่ม
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="exportDetailCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition border border-slate-200" title="ส่งออกเป็น Excel CSV">
+              <i class="fa-solid fa-file-excel text-emerald-600 mr-1"></i> ส่งออก Excel
+            </button>
+            <button id="btnVillageAddRecord" onclick="openFormModalForCurrentVillage()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition items-center gap-1.5">
+              <i class="fa-solid fa-plus text-xs"></i> บันทึกรายการเพิ่ม
+            </button>
+          </div>
         </div>
 
         <div>
@@ -360,7 +375,7 @@
         </div>
 
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-          <span class="text-[11px] font-extrabold text-rose-600 block">เฝ้าระวัง (&lt;20,000฿)</span>
+          <span class="text-[11px] font-extrabold text-rose-600 block">เฝ้าระวัง (<20,000฿)</span>
           <p id="dashLowBudgetCount" class="text-base sm:text-lg font-black text-rose-600 mt-1">0 หมู่บ้าน</p>
           <span class="text-[10px] text-rose-600 font-bold mt-1">งบใกล้หมด</span>
         </div>
@@ -436,6 +451,29 @@
 
   </main>
 
+  <!-- MODAL: EASY PASS REJECTION REASON -->
+  <div id="rejectionModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 border border-slate-200 space-y-3">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+        <h3 class="font-black text-rose-600 text-sm flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-xmark"></i> ระบุเหตุผลการปฏิเสธคำร้อง
+        </h3>
+        <button onclick="closeRejectionModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+      </div>
+      
+      <input type="hidden" id="rejectRowIndex">
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">เหตุผลการปฏิเสธ <span class="text-rose-500">*</span></label>
+        <textarea id="rejectReasonInput" rows="3" placeholder="เช่น งบประมาณซ่อมแซมคงเหลือไม่พอ หรือข้อมูลไม่ถูกต้อง" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none transition"></textarea>
+      </div>
+
+      <div class="flex gap-2 text-xs font-bold pt-1">
+        <button onclick="closeRejectionModal()" class="w-1/2 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition">ยกเลิก</button>
+        <button onclick="submitRejectPending()" class="w-1/2 py-2 bg-rose-600 text-white rounded-xl shadow-md hover:bg-rose-700 transition">ยืนยันปฏิเสธ</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: SHOW FULL PROJECT DETAILS -->
   <div id="projectDetailsModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 my-auto">
@@ -493,7 +531,7 @@
 
         <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
           <button type="button" onclick="closeVillageModal()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition">ยกเลิก</button>
-          <button type="submit" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm transition">บันทึกข้อมูล</button>
+          <button type="submit" id="btnSubmitVillage" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm transition">บันทึกข้อมูล</button>
         </div>
       </form>
     </div>
@@ -572,7 +610,7 @@
 
         <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
           <button type="button" onclick="closeFormModal()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition">ยกเลิก</button>
-          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm transition">บันทึกรายการ</button>
+          <button type="submit" id="btnSubmitTx" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm transition">บันทึกรายการ</button>
         </div>
       </form>
 
@@ -592,7 +630,7 @@
       
       <div class="flex gap-2 text-xs font-bold">
         <button onclick="closeLoginModal()" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition">ยกเลิก</button>
-        <button onclick="submitLogin()" class="w-1/2 py-2.5 bg-indigo-600 text-white rounded-xl shadow-md hover:bg-indigo-700 transition">ยืนยัน</button>
+        <button onclick="submitLogin()" id="btnLoginSubmit" class="w-1/2 py-2.5 bg-indigo-600 text-white rounded-xl shadow-md hover:bg-indigo-700 transition">ยืนยัน</button>
       </div>
     </div>
   </div>
@@ -613,7 +651,18 @@
     let budgetStructureChartObj = null;
     let topSpendersChartObj = null;
 
-    // Helper ยิง API ติดต่อ GAS
+    function showLoading(msg = 'กำลังโหลดข้อมูล...') {
+      document.getElementById('loadingText').innerText = msg;
+      document.getElementById('loadingOverlay').classList.remove('hidden');
+      document.getElementById('loadingOverlay').classList.add('flex');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('loadingOverlay').classList.remove('flex');
+    }
+
+    // Helper ยิง API ติดต่อ GAS พร้อม Timeout & Handling
     async function callGASAPI(action, payload = {}, pin = null) {
       try {
         const response = await fetch(GAS_API_URL, {
@@ -622,10 +671,14 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: action, pin: pin || currentAdminPin, payload: payload })
         });
-        return await response.json();
+        const resJson = await response.json();
+        if (resJson && resJson.error) {
+          throw new Error(resJson.error);
+        }
+        return resJson;
       } catch (err) {
         console.error('GAS API Fetch Error:', err);
-        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'error');
+        showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'error');
         throw err;
       }
     }
@@ -677,7 +730,7 @@
     function startRealtimePolling() {
       setInterval(() => {
         fetchPendingEasyPassRequests(false);
-      }, 10000);
+      }, 25000); // ปรับเป็น 25s เพื่อประหยัด Quota
     }
 
     function showToast(message, type = 'success') {
@@ -807,13 +860,15 @@
         isEdit: document.getElementById('villageIsEdit').value === "true"
       };
 
+      showLoading('กำลังบันทึกข้อมูลหมู่บ้าน...');
       try {
         const res = await callGASAPI('saveVillage', payload);
         closeVillageModal();
         showToast(res.message || 'บันทึกสำเร็จ');
         fetchMasterVillages();
       } catch (err) {
-        showToast(err.message, 'error');
+      } finally {
+        hideLoading();
       }
     }
 
@@ -940,10 +995,6 @@
       }
 
       pendingRequestsData.forEach((item) => {
-        const d = item.details || {};
-        // Data Normalization: ดึงยอดเงินแบบยืดหยุ่น ป้องกันเป็น 0/undefined
-        const itemAmount = Number(item.amount || d.totalActualCost || d.actualFuelCost || d.actualOilCost || 0);
-
         const div = document.createElement('div');
         div.className = "bg-slate-50 border border-slate-200 hover:border-indigo-400 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition cursor-pointer shadow-sm";
         div.onclick = () => openProjectDetailsModalObj(item);
@@ -952,22 +1003,22 @@
           <div class="space-y-1 text-xs">
             <div class="flex items-center gap-2">
               <span class="font-extrabold text-slate-900 text-sm hover:underline flex items-center">
-                <i class="fa-solid fa-circle-info text-indigo-500 mr-1.5"></i> ${item.requestId || item.reqId} - หมู่ ${item.villageNo} ${item.villageName}
+                <i class="fa-solid fa-circle-info text-indigo-500 mr-1.5"></i> ${item.requestId} - หมู่ ${item.villageNo} ${item.villageName}
               </span>
               <span class="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">รออนุมัติตัดงบ</span>
             </div>
-            <div class="text-slate-600 font-semibold"><b>TX Easy Pass:</b> ${item.easyPassTxId || '-'} | <b>ยื่นเมื่อ:</b> ${formatThaiDateString(item.requestDate)}</div>
+            <div class="text-slate-600 font-semibold"><b>TX Easy Pass:</b> ${item.easyPassTxId} | <b>ยื่นเมื่อ:</b> ${formatThaiDateString(item.requestDate)}</div>
           </div>
 
           <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3 border-t sm:border-t-0 pt-2 sm:pt-0" onclick="event.stopPropagation()">
             <div class="text-right">
               <span class="text-[10px] text-slate-500 block font-bold">ยอดเงินขอตัดงบ (หมวดซ่อมแซม)</span>
-              <span class="text-base font-black text-emerald-700">${itemAmount.toLocaleString()} ฿</span>
+              <span class="text-base font-black text-emerald-700">${item.amount.toLocaleString()} ฿</span>
             </div>
             ${currentAdminPin ? `
               <div class="flex items-center gap-1.5">
-                <button onclick="handleRejectPending(${item.rowIndex})" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold px-3 py-1.5 rounded-xl text-xs transition border border-rose-200">ปฏิเสธ</button>
-                <button onclick="handleApprovePending(${item.rowIndex}, '${item.easyPassTxId}', '${item.requestId}', ${item.villageNo}, '${item.villageName}', ${itemAmount})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl text-xs shadow-sm transition">ยอมรับ & ตัดงบซ่อมแซม</button>
+                <button onclick="openRejectModal(${item.rowIndex})" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold px-3 py-1.5 rounded-xl text-xs transition border border-rose-200">ปฏิเสธ</button>
+                <button onclick="handleApprovePending(${item.rowIndex}, '${item.easyPassTxId}', '${item.requestId}',${item.villageNo}, '${item.villageName}',${item.amount})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl text-xs shadow-sm transition">ยอมรับ & ตัดงบซ่อมแซม</button>
               </div>
             ` : '<span class="text-[11px] text-amber-700 font-bold italic">* เข้าสู่ระบบ Admin เพื่อกดยอมรับ</span>'}
           </div>
@@ -980,35 +1031,35 @@
       if (!item) return;
 
       const d = item.details || {};
-      const itemAmount = Number(item.amount || d.totalActualCost || d.actualFuelCost || d.actualOilCost || 0);
       const container = document.getElementById('projectDetailsModalContent');
 
       container.innerHTML = `
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
           <div class="flex justify-between items-center mb-1">
-            <span class="font-black text-slate-900 text-base">${item.requestId || item.reqId}</span>
-            <span class="bg-indigo-100 text-indigo-900 font-extrabold px-3 py-0.5 rounded-full text-xs">Easy Pass Request</span>
+            <span class="font-black text-slate-900 text-base">${item.requestId}</span>
+            <span class="bg-indigo-100 text-indigo-900 font-extrabold px-3 py-0.5 rounded-full text-xs">Accepted</span>
           </div>
           <div><b class="text-slate-600">สถานที่ปฏิบัติงาน:</b> <span class="font-bold text-slate-900">หมู่ที่ ${item.villageNo} ${item.villageName}</span></div>
-          <div><b class="text-slate-600">ผู้ยื่นคำขอ:</b> <span class="font-bold text-slate-900">${d.requesterName || d.requester || '-'} (${d.requesterPosition || d.position || '-'})</span></div>
+          <div><b class="text-slate-600">ผู้ยื่นคำขอ:</b> <span class="font-bold text-slate-900">${d.requesterName || '-'} (${d.requesterPosition || '-'})</span></div>
           <div><b class="text-slate-600">วันที่ยื่นระบบ:</b> ${formatThaiDateString(d.requestDate || item.requestDate)}</div>
-          <div><b class="text-slate-600">ช่วงวันขอใช้:</b> ${formatThaiDateString(d.reqStartDate || d.startDate)} ถึง ${formatThaiDateString(d.reqEndDate || d.endDate)}</div>
+          <div><b class="text-slate-600">วันที่ขอใช้ตั้งต้น:</b> ${formatThaiDateString(d.reqStartDate)} ถึง ${formatThaiDateString(d.reqEndDate)}</div>
         </div>
 
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
           <div class="font-black text-slate-900 border-b border-slate-200 pb-2 text-sm sm:text-base">รายละเอียดแผนงานและการอนุมัติ</div>
           <div><b class="text-slate-600">ผู้อนุมัติ:</b> ${d.approvedBy || 'ผู้ดูแลระบบสูงสุด (Super Admin)'}</div>
-          <div><b class="text-slate-600">เครื่องจักรกลที่จัดสรร:</b> <span class="font-bold text-amber-700">${d.assignedMachine || d.machineName || '-'}</span></div>
-          <div><b class="text-slate-600">ช่างผู้ปฏิบัติงาน:</b> <span class="font-bold text-blue-700">${d.assignedOperator || d.operatorName || '-'}</span></div>
-          <div><b class="text-slate-600">ประมาณการน้ำมัน:</b> ${d.planFuelLiters || d.estimatedFuel || 0} ลิตร</div>
+          <div><b class="text-slate-600">ช่วงวันตามแผนงาน:</b> ${formatThaiDateString(d.planStartDate)} ถึง ${formatThaiDateString(d.planEndDate)} (${d.planDays || 0} วัน)</div>
+          <div><b class="text-slate-600">เครื่องจักรกลที่จัดสรร:</b> <span class="font-bold text-amber-700">${d.assignedMachine || '-'}</span></div>
+          <div><b class="text-slate-600">ช่างผู้ปฏิบัติงาน:</b> <span class="font-bold text-blue-700">${d.assignedOperator || '-'}</span></div>
+          <div><b class="text-slate-600">น้ำมันประเมิน:</b> ${d.planFuelLiters || 0} ลิตร</div>
         </div>
 
         <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 space-y-1.5">
           <div class="font-black text-emerald-950 border-b border-emerald-200 pb-2 text-sm sm:text-base">สถานะการปฏิบัติงานจริง</div>
           <div><b class="text-slate-600">สถานะปัจจุบัน:</b> <span class="font-extrabold text-blue-700">${d.jobProgressStatus || 'ปฏิบัติงานแล้วเสร็จ'}</span></div>
           <div><b class="text-slate-600">ช่วงวันปฏิบัติงานจริง:</b> ${formatThaiDateString(d.actualStartDate)} ถึง ${formatThaiDateString(d.actualEndDate)} (${d.actualDays || 0} วัน)</div>
-          <div><b class="text-slate-600">น้ำมันใช้จริง:</b> ${d.actualFuelLiters || d.actualFuel || 0} ลิตร</div>
-          <div><b class="text-slate-600">ยอดเงินตัดงบ Easy Pass:</b> <span class="text-emerald-700 font-black text-base sm:text-lg">${itemAmount.toLocaleString()} บาท (ตัดหมวดซ่อมแซม)</span></div>
+          <div><b class="text-slate-600">น้ำมันใช้จริง:</b> ${d.actualFuelLiters || 0} ลิตร</div>
+          <div><b class="text-slate-600">ยอดเงินตัดงบ Easy Pass:</b> <span class="text-emerald-700 font-black text-base sm:text-lg">${item.amount.toLocaleString()} บาท (ตัดหมวดซ่อมแซม)</span></div>
         </div>
 
         ${d.docLink ? `
@@ -1041,6 +1092,7 @@
         amount: amount
       };
 
+      showLoading('กำลังอนุมัติคำร้องและตัดงบประมาณ...');
       try {
         const res = await callGASAPI('approveEasyPassRequest', reqData);
         showToast(res.message || 'อนุมัติคำร้องเรียบร้อยแล้ว');
@@ -1048,18 +1100,37 @@
         loadSystemSummaryData();
         if (currentSelectedVillageId !== null) fetchVillageDetailData();
       } catch (err) {
-        showToast(err.message, 'error');
+      } finally {
+        hideLoading();
       }
     }
 
-    async function handleRejectPending(rowIndex) {
-      if (!confirm('ยืนยันปฏิเสธคำร้องนี้?')) return;
+    function openRejectModal(rowIndex) {
+      document.getElementById('rejectRowIndex').value = rowIndex;
+      document.getElementById('rejectReasonInput').value = '';
+      document.getElementById('rejectionModal').classList.remove('hidden');
+      document.getElementById('rejectionModal').classList.add('flex');
+    }
+
+    function closeRejectionModal() {
+      document.getElementById('rejectionModal').classList.add('hidden');
+      document.getElementById('rejectionModal').classList.remove('flex');
+    }
+
+    async function submitRejectPending() {
+      const rowIndex = document.getElementById('rejectRowIndex').value;
+      const reason = document.getElementById('rejectReasonInput').value.trim();
+      if (!reason) return showToast('กรุณาระบุเหตุผลการปฏิเสธ', 'error');
+
+      showLoading('กำลังบันทึกการปฏิเสธคำร้อง...');
       try {
-        const res = await callGASAPI('rejectEasyPassRequest', { rowIndex: rowIndex });
+        const res = await callGASAPI('rejectEasyPassRequest', { rowIndex: parseInt(rowIndex, 10), reason: reason });
+        closeRejectionModal();
         showToast(res.message || 'ปฏิเสธคำร้องเรียบร้อยแล้ว');
         fetchPendingEasyPassRequests(true);
       } catch (err) {
-        showToast(err.message, 'error');
+      } finally {
+        hideLoading();
       }
     }
 
@@ -1102,10 +1173,14 @@
 
     async function fetchVillageDetailData() {
       const year = document.getElementById('globalYearSelect').value;
+      showLoading('กำลังโหลดรายละเอียดงบประมาณ...');
       try {
         const list = await callGASAPI('getVillageDetails', { villageId: currentSelectedVillageId, fiscalYear: year });
         renderDetailListUI(list);
-      } catch (e) {}
+      } catch (e) {
+      } finally {
+        hideLoading();
+      }
     }
 
     function renderDetailListUI(list) {
@@ -1440,6 +1515,7 @@
         note: document.getElementById('formNote').value
       };
 
+      showLoading('กำลังบันทึกรายการธุรกรรม...');
       try {
         const res = await callGASAPI('saveTransaction', payload);
         closeFormModal();
@@ -1447,19 +1523,22 @@
         if (currentSelectedVillageId !== null) fetchVillageDetailData();
         loadSystemSummaryData();
       } catch (err) {
-        showToast(err.message, 'error');
+      } finally {
+        hideLoading();
       }
     }
 
     async function deleteTx(txId) {
       if (!confirm('ยืนยันการลบรายการนี้ออกจากฐานข้อมูล?')) return;
+      showLoading('กำลังลบรายการ...');
       try {
         const res = await callGASAPI('deleteTransaction', { txId: txId });
         showToast(res.message || 'ลบรายการสำเร็จ');
         if (currentSelectedVillageId !== null) fetchVillageDetailData();
         loadSystemSummaryData();
       } catch (err) {
-        showToast(err.message, 'error');
+      } finally {
+        hideLoading();
       }
     }
 
@@ -1476,6 +1555,7 @@
 
     async function submitLogin() {
       const pin = document.getElementById('adminPinInput').value;
+      showLoading('กำลังตรวจสอบสิทธิ์ Admin...');
       try {
         const res = await callGASAPI('verifyAdminPin', {}, pin);
         if (res && res.success) {
@@ -1490,7 +1570,8 @@
           showToast('รหัส PIN ไม่ถูกต้อง', 'error');
         }
       } catch (err) {
-        showToast('การยืนยันสิทธิ์ล้มเหลว', 'error');
+      } finally {
+        hideLoading();
       }
     }
 
@@ -1500,6 +1581,48 @@
       checkAdminState();
       showToast('ออกจากระบบ Admin เรียบร้อยแล้ว');
       loadSystemSummaryData();
+    }
+
+    // EXPORT DATA TO CSV (EXCEL)
+    function exportSummaryCSV() {
+      if (!cachedSummaryData || cachedSummaryData.length === 0) return showToast('ไม่มีข้อมูลสำหรับส่งออก', 'error');
+
+      let csv = '\uFEFF'; // UTF-8 BOM
+      csv += "รหัส,ชื่อหน่วยงาน/หมู่บ้าน,งบจัดสรรรวม (บาท),งบปรับเพิ่ม (บาท),งบปรับลด (บาท),งบเบิกใช้แล้ว (บาท),งบคลังคงเหลือสุทธิ (บาท)\n";
+
+      cachedSummaryData.forEach(item => {
+        csv += `"${item.id}","${item.name}",${item.allocated || 0},${item.added || 0},${item.reduced || 0},${item.used || 0},${item.balance || 0}\n`;
+      });
+
+      downloadCSV(csv, `รายงานสรุปงบประมาณ_ปี${document.getElementById('globalYearSelect').value}.csv`);
+    }
+
+    function exportDetailCSV() {
+      if (!currentVillageDetailList || currentVillageDetailList.length === 0) return showToast('ไม่มีประวัติเบิกจ่ายสำหรับส่งออก', 'error');
+
+      const vTitle = document.getElementById('detailVillageTitle').innerText;
+      let csv = '\uFEFF';
+      csv += "ปีงบประมาณ,วันที่,ชื่อโครงการ/รายการ,ประเภท,จำนวนเงิน (บาท),หมายเหตุ\n";
+
+      currentVillageDetailList.forEach(item => {
+        const pName = (item.project_name || '').replace(/"/g, '""');
+        const note = (item.note || '').replace(/"/g, '""');
+        csv += `"${item.fiscal_year}","${item.date}","${pName}","${item.type}",${item.amount || 0},"${note}"\n`;
+      });
+
+      downloadCSV(csv, `ประวัติเบิกจ่าย_${vTitle}.csv`);
+    }
+
+    function downloadCSV(csvContent, fileName) {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   </script>
 </body>
