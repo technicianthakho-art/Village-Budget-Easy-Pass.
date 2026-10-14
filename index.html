@@ -117,7 +117,6 @@
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Admin Active
               </span>
               
-              <!-- BACKUP & RESTORE QUICK CONTROLS -->
               <button onclick="exportDatabaseBackup()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 p-2 rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center" title="สำรองฐานข้อมูล (.json)">
                 <i class="fa-solid fa-download text-xs"></i>
               </button>
@@ -144,7 +143,6 @@
     <!-- TAB 1: SUMMARY TABLE & CARDS -->
     <section id="tabSummary" class="space-y-4 sm:space-y-5">
       
-      <!-- Exec Cards Overview -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div class="flex justify-between items-center mb-1">
@@ -179,7 +177,6 @@
         </div>
       </div>
 
-      <!-- Action Search Bar -->
       <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
         <div class="relative flex-1">
           <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
@@ -201,7 +198,6 @@
         </div>
       </div>
 
-      <!-- Summary Table Desktop -->
       <div class="hidden sm:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="max-h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar">
           <table class="w-full text-left border-collapse text-xs sm:text-sm">
@@ -221,7 +217,6 @@
         </div>
       </div>
 
-      <!-- Summary Cards Mobile -->
       <div id="summaryCardContainer" class="sm:hidden space-y-2.5"></div>
 
     </section>
@@ -673,7 +668,6 @@
       document.getElementById('loadingOverlay').classList.remove('flex');
     }
 
-    // ROBUST API CALL ENGINE (พร้อมระบบ Retry ดักจับ HTML Error)
     async function callGASAPI(action, payload = {}, pin = null, retryCount = 0) {
       try {
         const response = await fetch(GAS_API_URL, {
@@ -685,7 +679,6 @@
         
         const rawText = await response.text();
         
-        // ดักจับกรณี Google ส่ง HTML Redirect/Login Page แทนที่จะเป็น JSON
         if (rawText.trim().startsWith('<')) {
           if (retryCount < 2) {
             await new Promise(resolve => setTimeout(resolve, 1500));
@@ -751,7 +744,6 @@
       }
     }
 
-    // SMART POLLING: ยิง API เช็กคิวเฉพาะตอนผู้ใช้เปิดหน้าเว็บอยู่ (Page Active Focus)
     function startSmartPolling() {
       setInterval(() => {
         if (!document.hidden) {
@@ -929,12 +921,17 @@
         totAdded += item.added;
         totBalance += item.balance;
 
+        let warningBadge = '';
+        if (item.repair_balance < 0) {
+          warningBadge = `<span class="bg-rose-100 text-rose-800 border border-rose-300 text-[10px] font-black px-2 py-0.5 rounded-full ml-1.5 whitespace-nowrap"><i class="fa-solid fa-triangle-exclamation text-rose-600 mr-0.5"></i> งบซ่อมแซมติดลบ ${Math.abs(item.repair_balance).toLocaleString()} ฿</span>`;
+        }
+
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50 transition cursor-pointer border-b border-slate-100";
         tr.onclick = () => openDetailPage(item.id, item.name);
         tr.innerHTML = `
           <td class="py-3 px-4 text-center font-mono font-bold text-slate-400">${item.id}</td>
-          <td class="py-3 px-4 font-bold text-slate-900">${item.name}</td>
+          <td class="py-3 px-4 font-bold text-slate-900">${item.name} ${warningBadge}</td>
           <td class="py-3 px-4 text-right font-extrabold text-rose-600">${item.used ? item.used.toLocaleString() + ' ฿' : '-'}</td>
           <td class="py-3 px-4 text-right font-extrabold text-emerald-600">${item.added ? item.added.toLocaleString() + ' ฿' : '-'}</td>
           <td class="py-3 px-4 text-right font-extrabold text-amber-600">${item.reduced ? item.reduced.toLocaleString() + ' ฿' : '-'}</td>
@@ -952,7 +949,7 @@
         card.onclick = () => openDetailPage(item.id, item.name);
         card.innerHTML = `
           <div class="flex justify-between items-center pb-2 border-b border-slate-100">
-            <span class="font-extrabold text-xs sm:text-sm text-slate-900">${item.id}. ${item.name}</span>
+            <span class="font-extrabold text-xs sm:text-sm text-slate-900">${item.id}. ${item.name} ${warningBadge}</span>
             <span class="text-xs font-black text-indigo-700">${item.balance.toLocaleString()} ฿</span>
           </div>
           <div class="grid grid-cols-3 gap-1 text-[11px] text-slate-600 font-bold pt-0.5">
@@ -1023,12 +1020,12 @@
 
       pendingRequestsData.forEach((item) => {
         const div = document.createElement('div');
-        div.className = "bg-slate-50 border border-slate-200 hover:border-indigo-400 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition cursor-pointer shadow-sm";
+        div.className = "bg-slate-50 border border-slate-200 hover:border-indigo-400 p-4 rounded-2xl flex flex-col justify-between items-start gap-3 transition cursor-pointer shadow-sm";
         div.onclick = () => openProjectDetailsModalObj(item);
         
         div.innerHTML = `
-          <div class="space-y-1 text-xs">
-            <div class="flex items-center gap-2">
+          <div class="w-full space-y-1 text-xs">
+            <div class="flex items-center justify-between">
               <span class="font-extrabold text-slate-900 text-sm hover:underline flex items-center">
                 <i class="fa-solid fa-circle-info text-indigo-500 mr-1.5"></i> ${item.requestId} - หมู่ ${item.villageNo} ${item.villageName}
               </span>
@@ -1037,21 +1034,54 @@
             <div class="text-slate-600 font-semibold"><b>TX Easy Pass:</b> ${item.easyPassTxId} | <b>ยื่นเมื่อ:</b> ${formatThaiDateString(item.requestDate)}</div>
           </div>
 
-          <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3 border-t sm:border-t-0 pt-2 sm:pt-0" onclick="event.stopPropagation()">
-            <div class="text-right">
+          <!-- ตัวเลือกยืมเงินงบประมาณปีถัดไป -->
+          <div class="w-full p-2.5 bg-amber-50/80 rounded-xl border border-amber-200 flex flex-wrap items-center justify-between gap-2 text-xs" onclick="event.stopPropagation()">
+            <label class="flex items-center gap-2 font-extrabold text-amber-950 cursor-pointer">
+              <input type="checkbox" id="chkBorrow_${item.rowIndex}" onchange="togglePendingBorrowYear(${item.rowIndex})" class="rounded text-indigo-600 w-4 h-4">
+              <span>ยืมเงินงบประมาณปีถัดไป</span>
+            </label>
+            <div id="boxBorrowYear_${item.rowIndex}" class="hidden items-center gap-1.5">
+              <span class="text-[11px] font-bold text-slate-600">ผูกมัดปีงบ:</span>
+              <select id="selBorrowYear_${item.rowIndex}" class="bg-white border border-amber-300 rounded-lg px-2 py-1 font-bold text-amber-900 text-xs">
+                <option value="2570">ปีงบประมาณ 2570</option>
+                <option value="2571">ปีงบประมาณ 2571</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between w-full gap-3 pt-1 border-t border-slate-200/60" onclick="event.stopPropagation()">
+            <div>
               <span class="text-[10px] text-slate-500 block font-bold">ยอดเงินขอตัดงบ (หมวดซ่อมแซม)</span>
               <span class="text-base font-black text-emerald-700">${item.amount.toLocaleString()} ฿</span>
             </div>
             ${currentAdminPin ? `
               <div class="flex items-center gap-1.5">
                 <button onclick="openRejectModal(${item.rowIndex})" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold px-3 py-1.5 rounded-xl text-xs transition border border-rose-200">ปฏิเสธ</button>
-                <button onclick="handleApprovePending(${item.rowIndex}, '${item.easyPassTxId}', '${item.requestId}',${item.villageNo}, '${item.villageName}',${item.amount})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl text-xs shadow-sm transition">ยอมรับ & ตัดงบซ่อมแซม</button>
+                <button onclick="handleApprovePendingFromUI(${item.rowIndex}, '${item.easyPassTxId}', '${item.requestId}',${item.villageNo}, '${item.villageName}',${item.amount})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl text-xs shadow-sm transition">ยอมรับ & ตัดงบซ่อมแซม</button>
               </div>
             ` : '<span class="text-[11px] text-amber-700 font-bold italic">* เข้าสู่ระบบ Admin เพื่อกดยอมรับ</span>'}
           </div>
         `;
         container.appendChild(div);
       });
+    }
+
+    function togglePendingBorrowYear(rowIndex) {
+      const chk = document.getElementById(`chkBorrow_${rowIndex}`);
+      const box = document.getElementById(`boxBorrowYear_${rowIndex}`);
+      if (chk && box) {
+        if (chk.checked) box.classList.remove('hidden'); else box.classList.add('hidden');
+      }
+    }
+
+    function handleApprovePendingFromUI(rowIndex, easyPassTxId, requestId, villageNo, villageName, amount) {
+      const chk = document.getElementById(`chkBorrow_${rowIndex}`);
+      const selYear = document.getElementById(`selBorrowYear_${rowIndex}`);
+      
+      const isAdvanceBorrow = chk ? chk.checked : false;
+      const targetYear = (isAdvanceBorrow && selYear) ? selYear.value : '';
+
+      handleApprovePending(rowIndex, easyPassTxId, requestId, villageNo, villageName, amount, isAdvanceBorrow, targetYear);
     }
 
     function openProjectDetailsModalObj(item) {
@@ -1107,7 +1137,7 @@
       document.getElementById('projectDetailsModal').classList.remove('flex');
     }
 
-    async function handleApprovePending(rowIndex, easyPassTxId, requestId, villageNo, villageName, amount) {
+    async function handleApprovePending(rowIndex, easyPassTxId, requestId, villageNo, villageName, amount, isAdvanceBorrow = false, targetFiscalYear = '') {
       if (!confirm(`ยืนยันกดยอมรับคำร้องตัดงบประมาณ (หมวดซ่อมแซม) หมู่ ${villageNo} ${villageName} จำนวน ${amount.toLocaleString()} บาท?`)) return;
 
       const reqData = {
@@ -1116,10 +1146,12 @@
         requestId: requestId,
         villageNo: villageNo,
         villageName: villageName,
-        amount: amount
+        amount: amount,
+        is_advance_borrow: isAdvanceBorrow,
+        target_fiscal_year: targetFiscalYear
       };
 
-      showLoading('กำลังอนุมัติคำร้องและตัดงบประมาณ...');
+      showLoading('กำลังอนุมัติคำร้องและส่งสัญญาณอัปเดต...');
       try {
         const res = await callGASAPI('approveEasyPassRequest', reqData);
         showToast(res.message || 'อนุมัติคำร้องเรียบร้อยแล้ว');
@@ -1615,10 +1647,6 @@
       showToast('ออกจากระบบ Admin เรียบร้อยแล้ว');
       loadSystemSummaryData();
     }
-
-    // =================================================================
-    // BACKUP & RESTORE FRONTEND CONTROLS (ส่วนเพิ่มใหม่)
-    // =================================================================
 
     async function exportDatabaseBackup() {
       if (!currentAdminPin) return showToast('กรุณาเข้าสู่ระบบ Admin ก่อนดำเนินการ', 'error');
