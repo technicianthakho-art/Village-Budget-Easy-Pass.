@@ -642,9 +642,18 @@
     </div>
   </div>
 
-  <!-- APP STATE & LOGIC ENGINE -->
+  <!-- APP STATE & LOGIC ENGINE (HIGH-PERFORMANCE SPEED UPGRADE) -->
   <script>
     const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbx5j7tZvVEWVaQ3cT9iiPsuy-v-CMiCJcacCbMDH7gpbq-WxqM2uPrDCH1oWSbPuSjN/exec';
+
+    // GLOBAL CLIENT-SIDE STATE MANAGER (ZERO DELAY CACHE)
+    const APP_STATE = {
+      summaryMap: {},
+      villages: [],
+      pendingList: [],
+      villageDetailsMap: {},
+      activeTab: 'summary'
+    };
 
     let MASTER_VILLAGES = [];
     let currentAdminPin = sessionStorage.getItem('admin_pin') || null;
@@ -681,7 +690,7 @@
         
         if (rawText.trim().startsWith('<')) {
           if (retryCount < 2) {
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            await new Promise(resolve => setTimeout(resolve, 1000));
             return await callGASAPI(action, payload, pin, retryCount + 1);
           }
           throw new Error("ระบบปลายทาง Google Apps Script ไม่ตอบสนองในรูปแบบ JSON (กรุณารีเฟรชหน้าเว็บ)");
@@ -722,8 +731,11 @@
         });
       }
 
+      // 1. INSTANT LOAD FROM LOCALSTORAGE
       loadFromLocalStorageCache();
       checkAdminState();
+
+      // 2. BACKGROUND FRESH FETCH
       fetchMasterVillages();
       fetchPendingEasyPassRequests(true);
       startSmartPolling();
@@ -731,16 +743,21 @@
 
     function loadFromLocalStorageCache() {
       const cachedVillages = localStorage.getItem('cache_master_villages');
-      const cachedSummary = localStorage.getItem('cache_budget_summary');
+      const selectedYear = document.getElementById('globalYearSelect').value;
+      const cachedSummary = localStorage.getItem('cache_budget_summary_' + selectedYear) || localStorage.getItem('cache_budget_summary');
 
       if (cachedVillages) {
         MASTER_VILLAGES = JSON.parse(cachedVillages);
+        APP_STATE.villages = MASTER_VILLAGES;
+        const countVillagesOnly = MASTER_VILLAGES.filter(v => v.id !== 0).length;
+        document.getElementById('headerVillageCountSubtitle').innerText = `${countVillagesOnly} หมู่บ้าน + 1 งบคลังกลาง`;
         populateFormVillageDropdown();
       }
+
       if (cachedSummary) {
         cachedSummaryData = JSON.parse(cachedSummary);
+        APP_STATE.summaryMap[selectedYear] = cachedSummaryData;
         renderSummaryUI(cachedSummaryData);
-        renderDashboardUI(cachedSummaryData);
       }
     }
 
@@ -778,6 +795,7 @@
       try {
         const list = await callGASAPI('getMasterVillages');
         MASTER_VILLAGES = list || [];
+        APP_STATE.villages = MASTER_VILLAGES;
         localStorage.setItem('cache_master_villages', JSON.stringify(MASTER_VILLAGES));
         
         const countVillagesOnly = MASTER_VILLAGES.filter(v => v.id !== 0).length;
@@ -808,6 +826,7 @@
     }
 
     function switchMainTab(tab) {
+      APP_STATE.activeTab = tab;
       document.getElementById('tabSummary').classList.add('hidden');
       document.getElementById('tabPending').classList.add('hidden');
       document.getElementById('tabDetail').classList.add('hidden');
@@ -893,6 +912,14 @@
 
     async function loadSystemSummaryData() {
       const selectedYear = document.getElementById('globalYearSelect').value;
+      
+      // Render Instant UI from State/Memory
+      if (APP_STATE.summaryMap[selectedYear]) {
+        cachedSummaryData = APP_STATE.summaryMap[selectedYear];
+        renderSummaryUI(cachedSummaryData);
+        if (APP_STATE.activeTab === 'dashboard') renderDashboardUI(cachedSummaryData);
+      }
+
       try {
         const res = await callGASAPI('getBudgetSummary', { fiscalYear: selectedYear });
         onSummaryLoaded(res);
@@ -900,10 +927,13 @@
     }
 
     function onSummaryLoaded(res) {
+      const selectedYear = document.getElementById('globalYearSelect').value;
       cachedSummaryData = res.data || [];
-      localStorage.setItem('cache_budget_summary', JSON.stringify(cachedSummaryData));
+      APP_STATE.summaryMap[selectedYear] = cachedSummaryData;
+      localStorage.setItem('cache_budget_summary_' + selectedYear, JSON.stringify(cachedSummaryData));
+      
       renderSummaryUI(cachedSummaryData);
-      renderDashboardUI(cachedSummaryData);
+      if (APP_STATE.activeTab === 'dashboard') renderDashboardUI(cachedSummaryData);
       if (currentSelectedVillageId !== null) updateDetailHeaderAmounts();
     }
 
@@ -979,6 +1009,7 @@
 
         previousPendingCount = currentCount;
         pendingRequestsData = newPendingList;
+        APP_STATE.pendingList = newPendingList;
         renderPendingRequestsUI();
         updateNotificationWidget();
       } catch (e) {}
@@ -1232,9 +1263,18 @@
 
     async function fetchVillageDetailData() {
       const year = document.getElementById('globalYearSelect').value;
-      showLoading('กำลังโหลดรายละเอียดงบประมาณ...');
+      const cacheKey = `${currentSelectedVillageId}_${year}`;
+
+      // Instant UI from Cache State
+      if (APP_STATE.villageDetailsMap[cacheKey]) {
+        renderDetailListUI(APP_STATE.villageDetailsMap[cacheKey]);
+      } else {
+        showLoading('กำลังโหลดรายละเอียดงบประมาณ...');
+      }
+
       try {
         const list = await callGASAPI('getVillageDetails', { villageId: currentSelectedVillageId, fiscalYear: year });
+        APP_STATE.villageDetailsMap[cacheKey] = list;
         renderDetailListUI(list);
       } catch (e) {
       } finally {
@@ -1585,6 +1625,11 @@
         const res = await callGASAPI('saveTransaction', payload);
         closeFormModal();
         showToast(res.message || 'บันทึกสำเร็จ');
+        
+        // Clear Client State Cache to enforce fresh update
+        APP_STATE.summaryMap = {};
+        APP_STATE.villageDetailsMap = {};
+
         if (currentSelectedVillageId !== null) fetchVillageDetailData();
         loadSystemSummaryData();
       } catch (err) {
@@ -1599,6 +1644,11 @@
       try {
         const res = await callGASAPI('deleteTransaction', { txId: txId });
         showToast(res.message || 'ลบรายการสำเร็จ');
+        
+        // Clear Client State Cache to enforce fresh update
+        APP_STATE.summaryMap = {};
+        APP_STATE.villageDetailsMap = {};
+
         if (currentSelectedVillageId !== null) fetchVillageDetailData();
         loadSystemSummaryData();
       } catch (err) {
@@ -1690,6 +1740,9 @@
           showLoading('กำลังเขียนข้อมูลคืนสู่เซิร์ฟเวอร์...');
           const res = await callGASAPI('importRestore', backupPayload);
           showToast(res.message || 'กู้คืนข้อมูลสำเร็จเรียบร้อยแล้ว');
+          
+          APP_STATE.summaryMap = {};
+          APP_STATE.villageDetailsMap = {};
           fetchMasterVillages();
           loadSystemSummaryData();
 
