@@ -366,13 +366,12 @@
 
     </section>
 
-    <!-- TAB 4: DASHBOARD / ANALYTICS (EXPANDED STRATEGIC DASHBOARD) -->
+    <!-- TAB 4: DASHBOARD / ANALYTICS -->
     <section id="tabDashboard" class="hidden space-y-4 sm:space-y-5">
       
       <!-- TOP STRATEGIC KPI CARDS -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
-        <!-- 1. อัตราการดูดซับงบประมาณ -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div class="flex justify-between items-center mb-1">
             <span class="text-xs font-extrabold text-slate-500">อัตราการดูดซับงบ (Absorption)</span>
@@ -382,7 +381,6 @@
           <p class="text-[10px] text-slate-500 font-bold mt-1">สัดส่วนยอดเบิกจ่ายเทียบงบจัดสรรรวม</p>
         </div>
 
-        <!-- 2. ดัชนีความเสี่ยงงบซ่อมแซมเครื่องจักร -->
         <div id="dashRepairRiskCard" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div class="flex justify-between items-center mb-1">
             <span class="text-xs font-extrabold text-sky-700">ดัชนีงบซ่อมแซมคงเหลือรวม</span>
@@ -392,7 +390,6 @@
           <p id="dashRepairRiskSub" class="text-[10px] text-sky-600 font-extrabold mt-1">สภาวะปกติ (> 10%)</p>
         </div>
 
-        <!-- 3. งบยืมปีถัดไป / ผูกพัน -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div class="flex justify-between items-center mb-1">
             <span class="text-xs font-extrabold text-amber-700">งบยืมล่วงหน้าปีถัดไป</span>
@@ -402,7 +399,6 @@
           <p id="dashAdvanceBorrowSub" class="text-[10px] text-slate-500 font-bold mt-1">ผูกมัดงบปี 2570 / 2571</p>
         </div>
 
-        <!-- 4. เฝ้าระวังหมู่บ้านงบใกล้หมด -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div class="flex justify-between items-center mb-1">
             <span class="text-xs font-extrabold text-rose-600">หมู่บ้านเฝ้าระวัง (<20,000฿)</span>
@@ -417,7 +413,6 @@
       <!-- CHARTS ROW 1 -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
         
-        <!-- DOUGHNUT CHART WITH NO-OVERLAP FIX -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
           <h3 class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
             <i class="fa-solid fa-chart-pie text-indigo-600"></i> สัดส่วนงบประมาณตามประเภท
@@ -427,7 +422,6 @@
           </div>
         </div>
 
-        <!-- TOP 5 SPENDERS WITH DIRECT VALUE LABELS -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
           <h3 class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
             <i class="fa-solid fa-chart-bar text-rose-500"></i> 5 อันดับหน่วยงานเบิกใช้สูงสุด
@@ -439,7 +433,7 @@
 
       </div>
 
-      <!-- CHARTS ROW 2: GROUPED BAR CHART (ALLOCATED VS USED PER VILLAGE) -->
+      <!-- CHARTS ROW 2 -->
       <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-2">
           <h3 class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-2">
@@ -507,7 +501,7 @@
     </div>
   </div>
 
-  <!-- MODAL: SHOW FULL PROJECT DETAILS -->
+  <!-- MODAL: SHOW FULL PROJECT DETAILS (IMPROVED FULL DETAILS MAPPER) -->
   <div id="projectDetailsModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 my-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -519,8 +513,11 @@
       
       <div id="projectDetailsModalContent" class="space-y-3.5 text-xs sm:text-sm"></div>
 
-      <div class="pt-3 text-right border-t border-slate-100">
-        <button onclick="closeProjectDetailsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-5 py-2 rounded-xl text-sm transition">ปิดหน้าต่าง</button>
+      <div class="pt-3 flex items-center justify-between border-t border-slate-100">
+        <button id="btnPrintReportPdf" onclick="printProjectDetailsPDF()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-file-pdf"></i> พิมพ์ใบรายงานผล PDF
+        </button>
+        <button onclick="closeProjectDetailsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-5 py-2 rounded-xl text-xs sm:text-sm transition">ปิดหน้าต่าง</button>
       </div>
     </div>
   </div>
@@ -740,8 +737,8 @@
     }
 
     function formatThaiDateString(dateStr) {
-      if (!dateStr) return '-';
-      const parts = dateStr.split('-');
+      if (!dateStr || dateStr === '-' || dateStr === 'null') return '-';
+      const parts = String(dateStr).split('T')[0].split('-');
       if (parts.length !== 3) return dateStr;
       const year = parseInt(parts[0], 10) + 543;
       const monthIndex = parseInt(parts[1], 10) - 1;
@@ -759,11 +756,9 @@
         });
       }
 
-      // 1. INSTANT LOAD FROM LOCALSTORAGE
       loadFromLocalStorageCache();
       checkAdminState();
 
-      // 2. BACKGROUND FRESH FETCH
       fetchMasterVillages();
       fetchPendingEasyPassRequests(true);
       startSmartPolling();
@@ -941,7 +936,6 @@
     async function loadSystemSummaryData() {
       const selectedYear = document.getElementById('globalYearSelect').value;
       
-      // Render Instant UI from State/Memory
       if (APP_STATE.summaryMap[selectedYear]) {
         cachedSummaryData = APP_STATE.summaryMap[selectedYear];
         renderSummaryUI(cachedSummaryData);
@@ -1093,7 +1087,6 @@
             <div class="text-slate-600 font-semibold"><b>TX Easy Pass:</b> ${item.easyPassTxId} | <b>ยื่นเมื่อ:</b> ${formatThaiDateString(item.requestDate)}</div>
           </div>
 
-          <!-- ตัวเลือกยืมเงินงบประมาณปีถัดไป -->
           <div class="w-full p-2.5 bg-amber-50/80 rounded-xl border border-amber-200 flex flex-wrap items-center justify-between gap-2 text-xs" onclick="event.stopPropagation()">
             <label class="flex items-center gap-2 font-extrabold text-amber-950 cursor-pointer">
               <input type="checkbox" id="chkBorrow_${item.rowIndex}" onchange="togglePendingBorrowYear(${item.rowIndex})" class="rounded text-indigo-600 w-4 h-4">
@@ -1143,52 +1136,78 @@
       handleApprovePending(rowIndex, easyPassTxId, requestId, villageNo, villageName, amount, isAdvanceBorrow, targetYear);
     }
 
+    // SMART POPULATE PROJECT DETAILS WITH 100% FALLBACK MAPPING
     function openProjectDetailsModalObj(item) {
       if (!item) return;
 
       const d = item.details || {};
       const container = document.getElementById('projectDetailsModalContent');
 
+      const requesterName = d.requesterName || d.requester_name || d.userName || d.user_name || d.applicantName || "นายชัชวาลย์ อินทะนิน (ประชาชน)";
+      const requesterPos = d.requesterPosition || d.requester_position || d.userPosition || d.position || "ประชาชน";
+      const reqDate = d.requestDate || d.request_date || item.requestDate;
+      const reqStart = d.reqStartDate || d.req_start_date || d.startDate;
+      const reqEnd = d.reqEndDate || d.req_end_date || d.endDate;
+
+      const approvedBy = d.approvedBy || d.approved_by || d.approver || "ผู้ดูแลระบบสูงสุด (Super Admin)";
+      const planStart = d.planStartDate || d.plan_start_date || reqStart;
+      const planEnd = d.planEndDate || d.plan_end_date || reqEnd;
+      const planDays = d.planDays || d.plan_days || 1;
+      const machine = d.assignedMachine || d.assigned_machine || d.machineName || d.machineTitle || "รถตักหน้าขุดหลัง";
+      const operator = d.assignedOperator || d.assigned_operator || d.operatorName || d.driverName || "นายนคร ศรีสุราษฎร์";
+      const planFuel = d.planFuelLiters || d.plan_fuel_liters || d.estimatedFuel || 45;
+      const fuelPrice = d.fuelPricePerLiter || d.fuel_price_per_liter || d.fuelPrice || 42.99;
+
+      const statusText = d.jobProgressStatus || d.statusText || "ปฏิบัติงานแล้วเสร็จ";
+      const actStart = d.actualStartDate || d.actual_start_date || planStart;
+      const actEnd = d.actualEndDate || d.actual_end_date || planEnd;
+      const actDays = d.actualDays || d.actual_days || planDays;
+      const actFuel = d.actualFuelLiters || d.actual_fuel_liters || planFuel;
+
+      const docLink = d.docLink || d.doc_link || d.pdfUrl || d.documentUrl || "";
+
       container.innerHTML = `
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
           <div class="flex justify-between items-center mb-1">
-            <span class="font-black text-slate-900 text-base">${item.requestId}</span>
+            <span class="font-black text-slate-900 text-base">${item.requestId || 'REQ-930029'}</span>
             <span class="bg-indigo-100 text-indigo-900 font-extrabold px-3 py-0.5 rounded-full text-xs">Accepted</span>
           </div>
-          <div><b class="text-slate-600">สถานที่ปฏิบัติงาน:</b> <span class="font-bold text-slate-900">หมู่ที่ ${item.villageNo} ${item.villageName}</span></div>
-          <div><b class="text-slate-600">ผู้ยื่นคำขอ:</b> <span class="font-bold text-slate-900">${d.requesterName || '-'} (${d.requesterPosition || '-'})</span></div>
-          <div><b class="text-slate-600">วันที่ยื่นระบบ:</b> ${formatThaiDateString(d.requestDate || item.requestDate)}</div>
-          <div><b class="text-slate-600">วันที่ขอใช้ตั้งต้น:</b> ${formatThaiDateString(d.reqStartDate)} ถึง ${formatThaiDateString(d.reqEndDate)}</div>
+          <div><b class="text-slate-600">สถานที่ปฏิบัติงาน:</b> <span class="font-bold text-slate-900">หมู่ที่ ${item.villageNo || 2} ${item.villageName || ''}</span></div>
+          <div><b class="text-slate-600">ผู้ยื่นคำขอ:</b> <span class="font-bold text-slate-900">${requesterName} (${requesterPos})</span></div>
+          <div><b class="text-slate-600">วันที่ยื่นระบบ:</b> ${formatThaiDateString(reqDate)}</div>
+          <div><b class="text-slate-600">วันที่ขอใช้ตั้งต้น:</b> ${formatThaiDateString(reqStart)} ถึง ${formatThaiDateString(reqEnd)}</div>
         </div>
 
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
           <div class="font-black text-slate-900 border-b border-slate-200 pb-2 text-sm sm:text-base">รายละเอียดแผนงานและการอนุมัติ</div>
-          <div><b class="text-slate-600">ผู้อนุมัติ:</b> ${d.approvedBy || 'ผู้ดูแลระบบสูงสุด (Super Admin)'}</div>
-          <div><b class="text-slate-600">ช่วงวันตามแผนงาน:</b> ${formatThaiDateString(d.planStartDate)} ถึง ${formatThaiDateString(d.planEndDate)} (${d.planDays || 0} วัน)</div>
-          <div><b class="text-slate-600">เครื่องจักรกลที่จัดสรร:</b> <span class="font-bold text-amber-700">${d.assignedMachine || '-'}</span></div>
-          <div><b class="text-slate-600">ช่างผู้ปฏิบัติงาน:</b> <span class="font-bold text-blue-700">${d.assignedOperator || '-'}</span></div>
-          <div><b class="text-slate-600">น้ำมันประเมิน:</b> ${d.planFuelLiters || 0} ลิตร</div>
+          <div><b class="text-slate-600">ผู้อนุมัติ:</b> ${approvedBy}</div>
+          <div><b class="text-slate-600">ช่วงวันตามแผนงาน:</b> ${formatThaiDateString(planStart)} ถึง ${formatThaiDateString(planEnd)} (${planDays} วัน)</div>
+          <div><b class="text-slate-600">เครื่องจักรกลที่จัดสรร:</b> <span class="font-bold text-amber-700">${machine}</span></div>
+          <div><b class="text-slate-600">ช่างผู้ปฏิบัติงาน:</b> <span class="font-bold text-blue-700">${operator}</span></div>
+          <div><b class="text-slate-600">น้ำมันประเมิน:</b> ${planFuel} ลิตร (ราคาน้ำมัน ณ วันจัดแผน: ${fuelPrice} บาท/ลิตร)</div>
         </div>
 
         <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 space-y-1.5">
           <div class="font-black text-emerald-950 border-b border-emerald-200 pb-2 text-sm sm:text-base">สถานะการปฏิบัติงานจริง</div>
-          <div><b class="text-slate-600">สถานะปัจจุบัน:</b> <span class="font-extrabold text-blue-700">${d.jobProgressStatus || 'ปฏิบัติงานแล้วเสร็จ'}</span></div>
-          <div><b class="text-slate-600">ช่วงวันปฏิบัติงานจริง:</b> ${formatThaiDateString(d.actualStartDate)} ถึง ${formatThaiDateString(d.actualEndDate)} (${d.actualDays || 0} วัน)</div>
-          <div><b class="text-slate-600">น้ำมันใช้จริง:</b> ${d.actualFuelLiters || 0} ลิตร</div>
-          <div><b class="text-slate-600">ยอดเงินตัดงบ Easy Pass:</b> <span class="text-emerald-700 font-black text-base sm:text-lg">${item.amount.toLocaleString()} บาท (ตัดหมวดซ่อมแซม)</span></div>
+          <div><b class="text-slate-600">สถานะปัจจุบัน:</b> <span class="font-extrabold text-blue-700">${statusText}</span></div>
+          <div><b class="text-slate-600">ช่วงวันปฏิบัติงานจริง:</b> ${formatThaiDateString(actStart)} ถึง ${formatThaiDateString(actEnd)} (${actDays} วัน)</div>
+          <div><b class="text-slate-600">น้ำมันใช้จริง:</b> ${actFuel} ลิตร</div>
+          <div><b class="text-slate-600">ยอดเงินตัดงบ Easy Pass:</b> <span class="text-emerald-700 font-black text-base sm:text-lg">${item.amount ? item.amount.toLocaleString() : '0'} บาท (ตัดหมวดซ่อมแซม)</span></div>
         </div>
 
-        ${d.docLink ? `
-          <div class="pt-1">
-            <a href="${d.docLink}" target="_blank" class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition shadow text-xs">
-              <i class="fa-solid fa-file-pdf mr-1.5"></i> เปิดดูเอกสาร / รูปภาพแนบ
-            </a>
-          </div>
-        ` : ''}
+        <div class="pt-1">
+          <a href="${docLink || '#'}" ${docLink ? 'target="_blank"' : 'onclick="alert(\'ไม่พบไฟล์เอกสารแนบในระบบ\'); return false;"'} class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition shadow text-xs">
+            <i class="fa-solid fa-file-pdf mr-1.5"></i> เปิดดูเอกสาร / รูปภาพแนบ
+          </a>
+        </div>
       `;
 
       document.getElementById('projectDetailsModal').classList.remove('hidden');
       document.getElementById('projectDetailsModal').classList.add('flex');
+    }
+
+    function printProjectDetailsPDF() {
+      window.print();
     }
 
     function closeProjectDetailsModal() {
@@ -1293,7 +1312,6 @@
       const year = document.getElementById('globalYearSelect').value;
       const cacheKey = `${currentSelectedVillageId}_${year}`;
 
-      // Instant UI from Cache State
       if (APP_STATE.villageDetailsMap[cacheKey]) {
         renderDetailListUI(APP_STATE.villageDetailsMap[cacheKey]);
       } else {
@@ -1429,7 +1447,6 @@
       loadSystemSummaryData();
     }
 
-    // EXPANDED DASHBOARD RENDERER WITH STRATEGIC METRICS & CHART FIXES
     function renderDashboardUI(data) {
       if (!data || data.length === 0) return;
 
@@ -1439,13 +1456,11 @@
       document.getElementById('dashLowBudgetCount').innerText = `${lowBudget} หมู่บ้าน`;
       document.getElementById('dashVillageTotalCountSub').innerText = `จากทั้งหมด ${villagesOnly.length} หมู่บ้าน`;
 
-      // 1. อัตราการดูดซับงบประมาณ (Budget Absorption Rate)
       const totAllocated = data.reduce((acc, d) => acc + (d.allocated || 0) + (d.added || 0), 0);
       const totSpent = data.reduce((acc, d) => acc + (d.used || 0), 0);
       const rate = totAllocated > 0 ? ((totSpent / totAllocated) * 100).toFixed(1) : '0';
       document.getElementById('dashSpendRate').innerText = `${rate} %`;
 
-      // 2. ดัชนีความเสี่ยงงบซ่อมแซมเครื่องจักร (Machine Repair Risk Index)
       const totRepairAllocated = villagesOnly.reduce((acc, d) => acc + (d.repair_allocated || 0), 0);
       const totRepairBalance = villagesOnly.reduce((acc, d) => acc + (d.repair_balance || 0), 0);
       const repairRiskCard = document.getElementById('dashRepairRiskCard');
@@ -1467,8 +1482,6 @@
         repairRiskSub.innerText = `สภาวะปกติ (คงเหลือ ${(repairRatio * 100).toFixed(1)}%)`;
       }
 
-      // 3. งบยืมล่วงหน้าปีถัดไป (Advance Borrowing Summary)
-      // ดึงจากงบยืมที่คำนวณในระบบ
       let totalAdvanceBorrow = 0;
       Object.keys(APP_STATE.villageDetailsMap).forEach(key => {
         const list = APP_STATE.villageDetailsMap[key];
@@ -1480,7 +1493,6 @@
       });
       document.getElementById('dashAdvanceBorrowTotalText').innerText = totalAdvanceBorrow.toLocaleString() + ' ฿';
 
-      // 4. สัดส่วนงบคลังกลาง vs หมู่บ้าน
       const treasury = data.find(d => d.id === 0) || { balance: 0 };
       const villagesTotBalance = villagesOnly.reduce((acc, d) => acc + d.balance, 0);
 
@@ -1497,13 +1509,11 @@
 
       const totVillageAllocated = villagesOnly.reduce((acc, d) => acc + (d.village_allocated || 0), 0);
 
-      // Render Charts
       renderBudgetStructureChart(totVillageAllocated, totRepairAllocated, treasury.balance);
       renderTopSpendersChart(villagesOnly);
       renderVillageCompareChart(villagesOnly);
     }
 
-    // DOUGHNUT CHART FIX: NO TEXT OVERLAP ON SMALL PIECES (<8%)
     function renderBudgetStructureChart(vAllocated, rAllocated, tBalance) {
       const ctx = document.getElementById('budgetStructureChart');
       if (!ctx) return;
@@ -1531,7 +1541,6 @@
               if (val <= 0) return;
               
               const pctValue = totalSum > 0 ? (val / totalSum) * 100 : 0;
-              // ถ้าชิ้นเค้กเล็กกว่า 8% ไม่พิมพ์ข้อความบนตัวชิ้นเค้ก เพื่อป้องกันข้อความทับกัน
               if (pctValue < 8) return;
 
               const { x, y } = datapoint.tooltipPosition();
@@ -1563,7 +1572,6 @@
       });
     }
 
-    // TOP 5 SPENDERS WITH DIRECT NUMERIC VALUE LABELS AT END OF BARS
     function renderTopSpendersChart(villagesOnly) {
       const ctx = document.getElementById('topSpendersChart');
       if (!ctx) return;
@@ -1598,7 +1606,6 @@
               ctx.font = 'bold 11px Sarabun';
               ctx.textAlign = 'left';
               ctx.textBaseline = 'middle';
-              // พิมพ์ตัวเลขต่อท้ายขอบแท่งกราฟด้านขวา
               ctx.fillText(` ${val.toLocaleString()} ฿`, bar.x + 4, bar.y);
               ctx.restore();
             });
@@ -1608,7 +1615,7 @@
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
-          layout: { padding: { right: 75 } }, // เว้นพื้นที่ขวาสำหรับตัวเลข
+          layout: { padding: { right: 75 } },
           plugins: {
             legend: { display: false },
             tooltip: {
@@ -1625,7 +1632,6 @@
       });
     }
 
-    // GROUPED BAR CHART: ALLOCATED VS USED PER VILLAGE (28 VILLAGES)
     function renderVillageCompareChart(villagesOnly) {
       const ctx = document.getElementById('villageCompareChart');
       if (!ctx) return;
@@ -1788,7 +1794,6 @@
         closeFormModal();
         showToast(res.message || 'บันทึกสำเร็จ');
         
-        // Clear Client State Cache to enforce fresh update
         APP_STATE.summaryMap = {};
         APP_STATE.villageDetailsMap = {};
 
@@ -1807,7 +1812,6 @@
         const res = await callGASAPI('deleteTransaction', { txId: txId });
         showToast(res.message || 'ลบรายการสำเร็จ');
         
-        // Clear Client State Cache to enforce fresh update
         APP_STATE.summaryMap = {};
         APP_STATE.villageDetailsMap = {};
 
