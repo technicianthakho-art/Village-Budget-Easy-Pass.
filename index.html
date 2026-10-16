@@ -366,48 +366,58 @@
 
     </section>
 
-    <!-- TAB 4: DASHBOARD / ANALYTICS -->
+    <!-- TAB 4: DASHBOARD / ANALYTICS (EXPANDED STRATEGIC DASHBOARD) -->
     <section id="tabDashboard" class="hidden space-y-4 sm:space-y-5">
       
-      <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
+      <!-- TOP STRATEGIC KPI CARDS -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
+        <!-- 1. อัตราการดูดซับงบประมาณ -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-          <span class="text-[11px] font-extrabold text-slate-500 block">จำนวนพื้นที่ดูแล</span>
-          <p id="dashVillageTotalCountText" class="text-base sm:text-lg font-black text-slate-900 mt-1">0 หมู่บ้าน</p>
-          <span class="text-[10px] text-emerald-600 font-extrabold mt-1"><i class="fa-solid fa-circle-check"></i> ครอบคลุมทั้งหมด</span>
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-extrabold text-slate-500">อัตราการดูดซับงบ (Absorption)</span>
+            <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs"><i class="fa-solid fa-gauge-high"></i></span>
+          </div>
+          <p id="dashSpendRate" class="text-2xl font-black text-emerald-600 tracking-tight">0 %</p>
+          <p class="text-[10px] text-slate-500 font-bold mt-1">สัดส่วนยอดเบิกจ่ายเทียบงบจัดสรรรวม</p>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-          <span class="text-[11px] font-extrabold text-slate-500 block">อัตราการเบิกใช้รวม</span>
-          <p id="dashSpendRate" class="text-base sm:text-lg font-black text-emerald-600 mt-1">0 %</p>
-          <span class="text-[10px] text-slate-500 font-bold mt-1">เทียบงบจัดสรร</span>
+        <!-- 2. ดัชนีความเสี่ยงงบซ่อมแซมเครื่องจักร -->
+        <div id="dashRepairRiskCard" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-extrabold text-sky-700">ดัชนีงบซ่อมแซมคงเหลือรวม</span>
+            <span id="dashRepairRiskBadge" class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xs"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+          </div>
+          <p id="dashRepairBalanceText" class="text-2xl font-black text-sky-700 tracking-tight">0 ฿</p>
+          <p id="dashRepairRiskSub" class="text-[10px] text-sky-600 font-extrabold mt-1">สภาวะปกติ (> 10%)</p>
         </div>
 
+        <!-- 3. งบยืมปีถัดไป / ผูกพัน -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-          <span class="text-[11px] font-extrabold text-rose-600 block">เฝ้าระวัง (<20,000฿)</span>
-          <p id="dashLowBudgetCount" class="text-base sm:text-lg font-black text-rose-600 mt-1">0 หมู่บ้าน</p>
-          <span class="text-[10px] text-rose-600 font-bold mt-1">งบใกล้หมด</span>
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-extrabold text-amber-700">งบยืมล่วงหน้าปีถัดไป</span>
+            <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs"><i class="fa-solid fa-calendar-plus"></i></span>
+          </div>
+          <p id="dashAdvanceBorrowTotalText" class="text-2xl font-black text-amber-600 tracking-tight">0 ฿</p>
+          <p id="dashAdvanceBorrowSub" class="text-[10px] text-slate-500 font-bold mt-1">ผูกมัดงบปี 2570 / 2571</p>
         </div>
 
+        <!-- 4. เฝ้าระวังหมู่บ้านงบใกล้หมด -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-          <span class="text-[11px] font-extrabold text-indigo-600 block">งบพัฒนาหมู่บ้าน</span>
-          <p id="dashVillageAllocatedTotalText" class="text-base sm:text-lg font-black text-indigo-700 mt-1">0 ฿</p>
-          <span class="text-[10px] text-slate-500 font-bold mt-1">ยอดจัดสรรรวม</span>
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-extrabold text-rose-600">หมู่บ้านเฝ้าระวัง (<20,000฿)</span>
+            <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-xs"><i class="fa-solid fa-triangle-exclamation"></i></span>
+          </div>
+          <p id="dashLowBudgetCount" class="text-2xl font-black text-rose-600 tracking-tight">0 หมู่บ้าน</p>
+          <p id="dashVillageTotalCountSub" class="text-[10px] text-slate-500 font-bold mt-1">จากทั้งหมด 28 หมู่บ้าน</p>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-          <span class="text-[11px] font-extrabold text-sky-600 block">งบซ่อมแซมเครื่องจักร</span>
-          <p id="dashRepairAllocatedTotalText" class="text-base sm:text-lg font-black text-sky-700 mt-1">0 ฿</p>
-          <span class="text-[10px] text-slate-500 font-bold mt-1">ยอดจัดสรรรวม</span>
-        </div>
-
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-          <span class="text-[11px] font-extrabold text-amber-600 block">คงเหลือคลังกลาง</span>
-          <p id="dashTreasuryBalanceText" class="text-base sm:text-lg font-black text-amber-600 mt-1">0 ฿</p>
-          <span class="text-[10px] text-slate-500 font-bold mt-1">งบคลังกลาง</span>
-        </div>
       </div>
 
+      <!-- CHARTS ROW 1 -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+        
+        <!-- DOUGHNUT CHART WITH NO-OVERLAP FIX -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
           <h3 class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
             <i class="fa-solid fa-chart-pie text-indigo-600"></i> สัดส่วนงบประมาณตามประเภท
@@ -417,6 +427,7 @@
           </div>
         </div>
 
+        <!-- TOP 5 SPENDERS WITH DIRECT VALUE LABELS -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
           <h3 class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
             <i class="fa-solid fa-chart-bar text-rose-500"></i> 5 อันดับหน่วยงานเบิกใช้สูงสุด
@@ -425,8 +436,23 @@
             <canvas id="topSpendersChart"></canvas>
           </div>
         </div>
+
       </div>
 
+      <!-- CHARTS ROW 2: GROUPED BAR CHART (ALLOCATED VS USED PER VILLAGE) -->
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-2">
+          <h3 class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-chart-column text-emerald-600"></i> เปรียบเทียบ "งบจัดสรร vs ยอดเบิกจริง" แยกรายหมู่บ้าน (28 หมู่บ้าน)
+          </h3>
+          <span class="text-[11px] font-extrabold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">วิเคราะห์การเบิกจ่ายรายพื้นที่</span>
+        </div>
+        <div class="h-72 sm:h-80 flex items-center justify-center relative">
+          <canvas id="villageCompareChart"></canvas>
+        </div>
+      </div>
+
+      <!-- TREASURY VS VILLAGES SPREAD -->
       <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <h3 class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-2">
           <i class="fa-solid fa-scale-balanced text-emerald-600"></i> สัดส่วนการกระจายงบคลังกลาง vs งบรวมทุกหมู่บ้าน
@@ -453,6 +479,7 @@
           </div>
         </div>
       </div>
+
     </section>
 
   </main>
@@ -665,6 +692,7 @@
 
     let budgetStructureChartObj = null;
     let topSpendersChartObj = null;
+    let villageCompareChartObj = null;
 
     function showLoading(msg = 'กำลังเชื่อมต่อเซิร์ฟเวอร์...') {
       document.getElementById('loadingText').innerText = msg;
@@ -1401,28 +1429,60 @@
       loadSystemSummaryData();
     }
 
+    // EXPANDED DASHBOARD RENDERER WITH STRATEGIC METRICS & CHART FIXES
     function renderDashboardUI(data) {
       if (!data || data.length === 0) return;
 
       const villagesOnly = data.filter(d => d.id !== 0);
       const lowBudget = villagesOnly.filter(d => d.balance < 20000).length;
       
-      document.getElementById('dashVillageTotalCountText').innerText = `${villagesOnly.length} หมู่บ้าน`;
       document.getElementById('dashLowBudgetCount').innerText = `${lowBudget} หมู่บ้าน`;
+      document.getElementById('dashVillageTotalCountSub').innerText = `จากทั้งหมด ${villagesOnly.length} หมู่บ้าน`;
 
-      const totAllocated = data.reduce((acc, d) => acc + d.allocated, 0);
-      const totSpent = data.reduce((acc, d) => acc + d.used, 0);
+      // 1. อัตราการดูดซับงบประมาณ (Budget Absorption Rate)
+      const totAllocated = data.reduce((acc, d) => acc + (d.allocated || 0) + (d.added || 0), 0);
+      const totSpent = data.reduce((acc, d) => acc + (d.used || 0), 0);
       const rate = totAllocated > 0 ? ((totSpent / totAllocated) * 100).toFixed(1) : '0';
       document.getElementById('dashSpendRate').innerText = `${rate} %`;
 
-      const totVillageAllocated = villagesOnly.reduce((acc, d) => acc + (d.village_allocated || 0), 0);
+      // 2. ดัชนีความเสี่ยงงบซ่อมแซมเครื่องจักร (Machine Repair Risk Index)
       const totRepairAllocated = villagesOnly.reduce((acc, d) => acc + (d.repair_allocated || 0), 0);
+      const totRepairBalance = villagesOnly.reduce((acc, d) => acc + (d.repair_balance || 0), 0);
+      const repairRiskCard = document.getElementById('dashRepairRiskCard');
+      const repairRiskBadge = document.getElementById('dashRepairRiskBadge');
+      const repairRiskSub = document.getElementById('dashRepairRiskSub');
+
+      document.getElementById('dashRepairBalanceText').innerText = totRepairBalance.toLocaleString() + ' ฿';
+      
+      const repairRatio = totRepairAllocated > 0 ? (totRepairBalance / totRepairAllocated) : 1;
+      if (repairRatio < 0.10) {
+        repairRiskCard.className = "bg-rose-50/80 p-4 rounded-2xl border border-rose-300 shadow-sm flex flex-col justify-between animate-pulse";
+        repairRiskBadge.className = "w-7 h-7 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xs";
+        repairRiskSub.className = "text-[10px] text-rose-600 font-extrabold mt-1 flex items-center gap-1";
+        repairRiskSub.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> สภาวะวิกฤต (< 10%) ต้องเติมงบ!`;
+      } else {
+        repairRiskCard.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between";
+        repairRiskBadge.className = "w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xs";
+        repairRiskSub.className = "text-[10px] text-sky-600 font-extrabold mt-1";
+        repairRiskSub.innerText = `สภาวะปกติ (คงเหลือ ${(repairRatio * 100).toFixed(1)}%)`;
+      }
+
+      // 3. งบยืมล่วงหน้าปีถัดไป (Advance Borrowing Summary)
+      // ดึงจากงบยืมที่คำนวณในระบบ
+      let totalAdvanceBorrow = 0;
+      Object.keys(APP_STATE.villageDetailsMap).forEach(key => {
+        const list = APP_STATE.villageDetailsMap[key];
+        if (Array.isArray(list)) {
+          list.forEach(item => {
+            if (item.is_advance_borrow) totalAdvanceBorrow += (item.amount || 0);
+          });
+        }
+      });
+      document.getElementById('dashAdvanceBorrowTotalText').innerText = totalAdvanceBorrow.toLocaleString() + ' ฿';
+
+      // 4. สัดส่วนงบคลังกลาง vs หมู่บ้าน
       const treasury = data.find(d => d.id === 0) || { balance: 0 };
       const villagesTotBalance = villagesOnly.reduce((acc, d) => acc + d.balance, 0);
-
-      document.getElementById('dashVillageAllocatedTotalText').innerText = totVillageAllocated.toLocaleString() + ' ฿';
-      document.getElementById('dashRepairAllocatedTotalText').innerText = totRepairAllocated.toLocaleString() + ' ฿';
-      document.getElementById('dashTreasuryBalanceText').innerText = treasury.balance.toLocaleString() + ' ฿';
 
       document.getElementById('dashTreasuryText').innerText = treasury.balance.toLocaleString() + ' ฿';
       document.getElementById('dashVillagesTotalLabelText').innerText = `งบรวม ${villagesOnly.length} หมู่บ้าน`;
@@ -1435,11 +1495,15 @@
       document.getElementById('dashTreasuryBar').style.width = `${tPct}%`;
       document.getElementById('dashVillagesBar').style.width = `${vPct}%`;
 
+      const totVillageAllocated = villagesOnly.reduce((acc, d) => acc + (d.village_allocated || 0), 0);
+
+      // Render Charts
       renderBudgetStructureChart(totVillageAllocated, totRepairAllocated, treasury.balance);
       renderTopSpendersChart(villagesOnly);
+      renderVillageCompareChart(villagesOnly);
     }
 
-    // DOUGHNUT CHART WITH DIRECT NUMERIC & PERCENTAGE DATA LABELS
+    // DOUGHNUT CHART FIX: NO TEXT OVERLAP ON SMALL PIECES (<8%)
     function renderBudgetStructureChart(vAllocated, rAllocated, tBalance) {
       const ctx = document.getElementById('budgetStructureChart');
       if (!ctx) return;
@@ -1459,15 +1523,18 @@
           }]
         },
         plugins: [{
-          id: 'alwaysShowDataLabels',
+          id: 'smartNoOverlapDataLabels',
           afterDraw(chart) {
             const { ctx, data } = chart;
             chart.getDatasetMeta(0).data.forEach((datapoint, index) => {
               const val = data.datasets[0].data[index];
               if (val <= 0) return;
               
+              const pctValue = totalSum > 0 ? (val / totalSum) * 100 : 0;
+              // ถ้าชิ้นเค้กเล็กกว่า 8% ไม่พิมพ์ข้อความบนตัวชิ้นเค้ก เพื่อป้องกันข้อความทับกัน
+              if (pctValue < 8) return;
+
               const { x, y } = datapoint.tooltipPosition();
-              const pct = totalSum > 0 ? ((val / totalSum) * 100).toFixed(1) + '%' : '0%';
               const formattedValue = (val / 1000000).toFixed(2) + 'M';
               
               ctx.save();
@@ -1475,7 +1542,7 @@
               ctx.font = 'bold 11px Sarabun';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillText(`${formattedValue} (${pct})`, x, y);
+              ctx.fillText(`${formattedValue} (${pctValue.toFixed(1)}%)`, x, y);
               ctx.restore();
             });
           }
@@ -1496,6 +1563,7 @@
       });
     }
 
+    // TOP 5 SPENDERS WITH DIRECT NUMERIC VALUE LABELS AT END OF BARS
     function renderTopSpendersChart(villagesOnly) {
       const ctx = document.getElementById('topSpendersChart');
       if (!ctx) return;
@@ -1517,10 +1585,30 @@
             borderRadius: 8
           }]
         },
+        plugins: [{
+          id: 'barDirectValueLabels',
+          afterDraw(chart) {
+            const { ctx } = chart;
+            chart.getDatasetMeta(0).data.forEach((bar, index) => {
+              const val = chart.data.datasets[0].data[index];
+              if (val <= 0) return;
+
+              ctx.save();
+              ctx.fillStyle = '#e11d48';
+              ctx.font = 'bold 11px Sarabun';
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'middle';
+              // พิมพ์ตัวเลขต่อท้ายขอบแท่งกราฟด้านขวา
+              ctx.fillText(` ${val.toLocaleString()} ฿`, bar.x + 4, bar.y);
+              ctx.restore();
+            });
+          }
+        }],
         options: {
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { right: 75 } }, // เว้นพื้นที่ขวาสำหรับตัวเลข
           plugins: {
             legend: { display: false },
             tooltip: {
@@ -1532,6 +1620,55 @@
           scales: {
             x: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 10, weight: 'bold' } } },
             y: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 11, weight: 'bold' } } }
+          }
+        }
+      });
+    }
+
+    // GROUPED BAR CHART: ALLOCATED VS USED PER VILLAGE (28 VILLAGES)
+    function renderVillageCompareChart(villagesOnly) {
+      const ctx = document.getElementById('villageCompareChart');
+      if (!ctx) return;
+
+      const labels = villagesOnly.map(v => v.name);
+      const allocatedData = villagesOnly.map(v => v.allocated + v.added);
+      const usedData = villagesOnly.map(v => v.used);
+
+      if (villageCompareChartObj) villageCompareChartObj.destroy();
+
+      villageCompareChartObj = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'งบจัดสรรรวม (บาท)',
+              data: allocatedData,
+              backgroundColor: '#6366f1',
+              borderRadius: 4
+            },
+            {
+              label: 'ยอดเบิกจ่ายจริง (บาท)',
+              data: usedData,
+              backgroundColor: '#f43f5e',
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top', labels: { font: { family: 'Sarabun', size: 11, weight: 'bold' } } },
+            tooltip: {
+              callbacks: {
+                label: function(context) { return ` ${context.dataset.label}: ${context.raw.toLocaleString()} บาท`; }
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 9, weight: 'bold' }, maxRotation: 45, minRotation: 45 } },
+            y: { grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Sarabun', size: 10, weight: 'bold' } } }
           }
         }
       });
