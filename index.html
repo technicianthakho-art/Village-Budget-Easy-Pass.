@@ -1439,10 +1439,13 @@
       renderTopSpendersChart(villagesOnly);
     }
 
+    // DOUGHNUT CHART WITH DIRECT NUMERIC & PERCENTAGE DATA LABELS
     function renderBudgetStructureChart(vAllocated, rAllocated, tBalance) {
       const ctx = document.getElementById('budgetStructureChart');
       if (!ctx) return;
       if (budgetStructureChartObj) budgetStructureChartObj.destroy();
+
+      const totalSum = vAllocated + rAllocated + Math.max(0, tBalance);
 
       budgetStructureChartObj = new Chart(ctx, {
         type: 'doughnut',
@@ -1455,6 +1458,28 @@
             borderColor: '#ffffff'
           }]
         },
+        plugins: [{
+          id: 'alwaysShowDataLabels',
+          afterDraw(chart) {
+            const { ctx, data } = chart;
+            chart.getDatasetMeta(0).data.forEach((datapoint, index) => {
+              const val = data.datasets[0].data[index];
+              if (val <= 0) return;
+              
+              const { x, y } = datapoint.tooltipPosition();
+              const pct = totalSum > 0 ? ((val / totalSum) * 100).toFixed(1) + '%' : '0%';
+              const formattedValue = (val / 1000000).toFixed(2) + 'M';
+              
+              ctx.save();
+              ctx.fillStyle = '#ffffff';
+              ctx.font = 'bold 11px Sarabun';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(`${formattedValue} (${pct})`, x, y);
+              ctx.restore();
+            });
+          }
+        }],
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -1466,7 +1491,7 @@
               }
             }
           },
-          cutout: '70%'
+          cutout: '65%'
         }
       });
     }
